@@ -1,0 +1,2734 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fragebogen mit Tierprofil</title>
+  <!-- Open Sans einbinden statt Roboto -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Plugin für Prozentwerte im Diagramm -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    /* Basis-Styling */
+    body {
+      font-family: 'Open Sans', sans-serif;
+      margin: 0 auto;
+      padding: 0 20px 40px;
+      max-width: 960px;
+      background: #f5f5f5;
+      color: #2c2c2c; /* neutraler, gut lesbarer Text */
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      text-align: center;
+      margin-top: 60px;
+      margin-bottom: 20px;
+      letter-spacing: 0.3px;
+    }
+    .user-inputs {
+      margin-bottom: 30px;
+    }
+    .user-inputs input {
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1em;
+    }
+    #result-footer {
+      display: none;
+    }
+    .user-inputs label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    /* Logo, Header und Beschreibung */
+    .logo-wrapper {
+      text-align: center;
+    }
+    /* OrganisationsZoo-Text ausblenden */
+    .logo-wrapper .organisationszoo {
+      display: none !important;
+    }
+    /* Eule ohne kreisförmigen Zuschnitt */
+    .logo-wrapper .eule,
+    #result-header img {
+      display: block;
+      margin: 0 auto;
+      width: 200px;       /* gewünschte Breite; anpassen, falls nötig */
+      height: 200px;      /* gleiche Höhe für einen quadratischen Bereich */
+      object-fit: cover;  /* sorgt dafür, dass das Bild vollständig angezeigt wird */
+      border-radius: 0;   /* kein runder Zuschnitt */
+      background-color: #ffffff;
+      border: none;
+    }
+    .logo-container {
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      background-color: #ffffff;
+      padding: 40px 0;
+      box-sizing: border-box;
+    }
+    .logo-background {
+      background-color: #ffffff;
+      padding: 30px 0;
+    }
+    .beschreibung {
+      max-width: 800px;
+      margin: 40px auto;
+      font-size: 1.1em;
+      line-height: 1.7;
+      color: #2c2c2c;
+      text-align: center;
+    }
+    .beschreibung h2 {
+      font-size: 1.6em;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 20px;
+    }
+    .beschreibung .highlight {
+      color: #E44A00;
+      font-weight: bold;
+    }
+
+    /* Dark Mode */
+    @media (prefers-color-scheme: dark) {
+      .beschreibung {
+        color: #f0f0f0;
+      }
+      .beschreibung h2 {
+        color: #ffffff;
+      }
+      .beschreibung .highlight {
+        color: #E44A00;
+      }
+    }
+    /* Light Mode (Standard) */
+    h2 {
+      color: #000; /* oder dein Standard-Dunkelblau */
+    }
+    /* Dark Mode */
+    @media (prefers-color-scheme: dark) {
+      h2 {
+        color: #ffffff; /* Willkommens-Text in Weiss */
+      }
+      .highlight {
+        color: #E44A00; /* OrganisationsZoo bleibt orange */
+      }
+    }
+    .intro-section {
+      background-color: #ffffff;
+      padding: 40px 20px;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      box-sizing: border-box;
+    }
+    /* Galerie und Profilboxen */
+    #gallery,
+    .chartWrap {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+      width: 100%;
+    }
+    .tier-profil {
+      width: 100%;
+      max-width: 960px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+.tier-container {
+  width: 100%;
+  max-width: 960px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+    .tier-bild {
+      flex: 0 0 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  .tier-bild img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+    }
+   .tier-text {
+      flex: 1;
+      padding: 0 10px;
+      text-align: center;
+      font-size: 0.9em;
+      color: #2c2c2c;
+    }
+    .tier-text strong {
+      font-size: 1.1em;
+      color: #1a1a1a;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .tier-text p,
+    .tier-text em {
+      font-size: 0.85em;
+    }
+    .tier-diagramm {
+      flex: 0 0 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Frage-Boxen und Antworten */
+    .frage-box {
+      background: #fff;
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .frage-box h2 {
+      font-size: 1.1em;
+      margin-bottom: 10px;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+    .skala-antwort {
+      margin-bottom: 10px;
+    }
+    .skala-antwort label {
+      color: #555555;
+      font-weight: 500;
+    }
+    /* Dark Mode für Fragen */
+    @media (prefers-color-scheme: dark) {
+      .frage-box {
+        background: #1e1e1e;
+        color: #f0f0f0;
+      }
+      .frage-box h2 {
+        color: #f0f0f0;
+      }
+      .skala-antwort label {
+        color: #dddddd;
+      }
+      .skala-antwort input[type="radio"] {
+        accent-color: #E44A00;
+      }
+    }
+    /* Radio-Buttons orange einfärben */
+    input[type="radio"] {
+      accent-color: #E44A00;
+    }
+    /* Buttons */
+    button {
+      display: block;
+      margin: 25px auto;
+      padding: 12px 25px;
+      font-size: 1rem;
+      background-color: #E44A00;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+    #ergebnis {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      margin: 30px auto;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+    /* Responsive Styles */
+    @media screen and (max-width: 600px) {
+      .frage-box, #ergebnis {
+        padding: 15px;
+      }
+      canvas {
+        max-width: 100% !important;
+        height: auto !important;
+      }
+    }
+    /* Druck-Stile */
+    @media print {
+      /* Elemente der Hauptseite ausblenden */
+      #fragebogen, 
+      button[type="submit"], 
+      .logo-wrapper { 
+        display: none;
+      }
+      /* Ergebnisbereich anzeigen */
+      #ergebnis {
+        display: block;
+        width: 100%;
+        padding: 10px;
+      }
+      #eule-logo {
+        width: 50px !important;
+        height: auto !important;
+        margin-bottom: 10px !important;
+      }
+      .organisationszoo {
+        font-size: 20px !important;
+      }
+      .category-header h2 {
+        font-size: 1.2em !important;
+      }
+      .category-header p {
+        font-size: 0.8em !important;
+      }
+      .page-break {
+        page-break-after: always;
+      }
+      .second-evaluation {
+        font-size: 10pt;
+        margin: 0 auto;
+        max-width: 100%;
+        padding: 5mm;
+      }
+      .second-evaluation h2 {
+        font-size: 14pt !important;
+      }
+      .second-evaluation h3 {
+        font-size: 12pt !important;
+      }
+      .second-evaluation p {
+        font-size: 10pt !important;
+      }
+      .second-evaluation canvas {
+        max-width: 90% !important;
+        height: auto !important;
+      }
+      /* Top-5-Bereich und Konfliktbereich dynamisch skalieren */
+      .chartWrap {
+        transform: scale(0.9);
+        transform-origin: center top;
+      }
+      /* Reduziere die Abstände in den Profil-Boxen */
+      .tier-profil {
+        padding: 5px !important;
+        margin-bottom: 10px !important;
+      }
+      /* Schriftgrössen in den Profil-Texten verkleinern */
+      .tier-text strong {
+        font-size: 1em !important;
+      }
+      .tier-text p, 
+      .tier-text em {
+        font-size: 0.8em !important;
+      }
+    }
+/* Für den normalen Top‑5 Bereich: Stelle sicher, dass das Symbol nicht kursiv ist */
+.tier-text span {
+  font-style: normal;
+}
+/* Standard: Footer im Browser verstecken */
+.print-footer {
+  display: none;
+}
+
+/* Im Druck: Footer zeigen */
+@media print {
+  .print-footer {
+    display: block;
+    text-align: center;
+    font-size: 0.75em;
+    margin-top: 1cm;
+  }
+}
+
+.tier-konflikt-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.tier-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background-color: #f7f7f7;
+  gap: 20px;
+}
+
+.tier-bild img {
+  width: 100px;
+  height: auto;
+  border-radius: 8px;
+}
+
+.tier-text {
+  flex: 1;
+  text-align: left;
+}
+
+.tier-text strong {
+  font-size: 1.2em;
+  display: block;
+  margin-bottom: 5px;
+}
+    @media (prefers-color-scheme: dark) {
+      h1 {
+        color: #ffffff;
+        background-color: transparent;
+      }
+    }
+    /* Finaler Dark Mode für gesamte Seite */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #111;
+        color: #eee;
+      }
+      .beschreibung, .frage-box, #ergebnis {
+        background-color: #222;
+        color: #ddd;
+      }
+    }
+    @media screen and (max-width: 600px) {
+      #result-header {
+        /* Skaliere den gesamten Container, damit er auf mobilen Geräten reinpasst */
+        transform: scale(0.8);
+        transform-origin: top left;
+        /* Eventuell musst du die Breite erhöhen, damit die Skalierung korrekt funktioniert. Hier als Beispiel: */
+        width: 125%;
+      }
+    }
+    .tier-container {
+      background: white;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      font-size: 0.85em;
+      flex-wrap: wrap;
+      color: #000; /* Textfarbe schwarz */
+    }
+    /* Dark Mode – Hintergrund & Textfarbe trotzdem wie im Light Mode */
+    @media (prefers-color-scheme: dark) {
+      .tier-container {
+        background-color: white !important;
+        color: #000 !important;
+      }
+    }
+    /* Mobile Optimierung */
+    @media screen and (max-width: 600px) {
+      .tier-container {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+      }
+      .tier-container > div {
+        margin-bottom: 10px;
+      }
+      .tier-container img {
+        height: auto;
+        max-height: 120px;
+      }
+    }
+    /* Standard-Styling für Textarea und Label in .user-inputs */
+    .user-inputs textarea {
+      width: 100%;
+      max-width: 600px;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      resize: vertical;
+      background-color: #fff;
+      color: #000;
+      transition: all 0.3s ease;
+    }
+    .user-inputs label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #222;
+    }
+    .user-inputs label span {
+      display: block;
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+    /* Dark Mode (respektiert das OS-Setting) */
+    @media (prefers-color-scheme: dark) {
+      .user-inputs textarea {
+        background-color: #1e1e1e;
+        color: #f0f0f0;
+        border: 1px solid #555;
+      }
+      .user-inputs label {
+        color: #eee;
+      }
+      .user-inputs label span {
+        color: #aaa;
+      }
+    }
+
+:root {
+  /* Helles Theme */
+  --bg-color: #ffffff;
+  --text-primary: #222222;
+  --text-secondary: #444444;
+  --border-color: #E44A00;
+}
+
+@media (prefers-color-scheme: dark) {
+  .heading-wrapper h2,
+  .heading-wrapper p {
+    /* zwingend hell anzeigen */
+    color: #ffffff !important;
+  }
+}
+
+.heading-wrapper {
+  max-width: 90%;
+  width: 800px;
+  margin: 50px auto 30px;
+  padding: 0 16px;             /* sorgt für Abstand auf kleinen Bildschirmen */
+  text-align: center;
+}
+
+.heading-wrapper h2 {
+  font-size: 1.8em;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.heading-wrapper p {
+  font-size: 0.95em;
+  /* statt var(--text-secondary) jetzt: */
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;      /* mobile: untereinander */
+  align-items: center;
+  gap: 16px;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 30px auto;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  max-width: 90%;
+  border-left: 6px solid var(--border-color);
+}
+
+/* Ab Tablet‑Grösse nebeneinander anordnen */
+@media (min-width: 600px) {
+  .section {
+    flex-direction: row;
+    gap: 24px;
+    padding: 20px 28px;
+  }
+}
+
+.section img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #f0f0f0;
+  padding: 8px;
+}
+
+.section .text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section .text h3 {
+  margin: 0;
+  font-size: 1.1em;
+  color: var(--text-primary);
+}
+
+.section .text p {
+  margin: 0;
+  font-size: 0.95em;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.reflexion-text {
+  font-size: 0.95em;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+@media (prefers-color-scheme: dark) {
+  .reflexion-text {
+    color: #ffffff !important;
+  }
+}
+:root {
+  --bg-card: #ffffff;
+  --text-color: #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-card: #1e1e1e;
+    --text-color: #ffffff;
+  }
+}
+:root {
+  --bg-color: #ffffff;
+  --text-primary: #222222;
+  --text-secondary: #666666;
+  --border-color: #ccc;
+  --accent-color: #E44A00;
+}
+/* In dein bestehendes <style>-Block */
+.required-label::after {
+  content: ' *';
+  color: red;            /* oder var(--accent-color) */
+  margin-left: 0.25rem;
+  font-weight: bold;
+}
+
+/* Container für alle Felder */
+.user-inputs {
+  max-width: 480px;
+  margin: 0 0 1.5rem 0;       /* oben 0, rechts 0, unten 1.5rem, links 0 */
+  padding: 0;                 /* kein Innenabstand mehr */
+  font-family: 'Open Sans', sans-serif;
+  text-align: left;
+}
+
+/* Label-Style */
+.user-inputs label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Hilfetexte unter Labels */
+.user-inputs .help-text {
+  margin: -0.25rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Inputs und Textareas */
+.user-inputs input,
+.user-inputs textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+/* Mehrzeilige Felder */
+.user-inputs textarea {
+  resize: vertical;
+}
+
+/* Fokus-Zustand */
+.user-inputs input:focus,
+.user-inputs textarea:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(228, 74, 0, 0.2);
+}
+
+/* Pflichtfeld-Stern im Feld */
+.required-field {
+  position: relative;
+}
+.required-field input {
+  padding-right: 2rem;
+}
+.required-field::after {
+  content: '*';
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  color: var(--accent-color);
+  font-size: 1.2rem;
+  pointer-events: none;
+}
+
+/* Radio-Group (Selbst/Fremd) */
+.user-inputs .radio-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0 0;
+}
+.user-inputs .radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.user-inputs .radio-group input[type="radio"] {
+  accent-color: var(--accent-color);
+  transform: scale(1.1);
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #1e1e1e;
+    --text-primary: #eee;
+    --text-secondary: #aaa;
+    --border-color: #444;
+  }
+}
+
+/* Mobile-Feinheiten */
+@media (max-width: 600px) {
+  .user-inputs {
+    padding: 0 0.5rem;
+  }
+}
+@media (max-width: 600px) {
+  .tier-profil {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .tier-bild, .tier-text, .tier-diagramm {
+    flex: none;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+.tier-bild img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  max-width: 100%;
+  display: block;
+}
+}
+.radio-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 8px;
+}
+.radio-option input[type="radio"] {
+  margin-bottom: 4px;
+}
+.radio-label {
+  font-size: 0.9em;
+  color: #33
+}
+.radio-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start; /* statt center */
+  gap: 16px;
+}
+
+.radio-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* das kannst du auch auf flex-start ändern, wenn auch die Zahl ganz links sein soll */
+}
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <div class="logo-wrapper">
+      <img src="eule-organisationszoo.png" alt="Eule" class="eule" />
+      <div class="organisationszoo">OrganisationsZoo</div>
+    </div>
+  </div>
+
+ <!-- 🐾 Einleitung (zentriert) -->
+<div style="text-align: center;">
+  <h2>Willkommen beim <span style="color:#E44A00;">OrganisationsZoo</span></h2>
+</div>
+
+<!-- 💬 Einleitungstext (linksbündig) in einem eigenen Container -->
+<div class="intro-text" style="text-align: left;">
+  <p>
+    Stell dir vor, du bist Mitbewohner*in in einer Wohngruppe oder Mitarbeitende*r an deinem Arbeitsplatz.  
+    In diesem Fragebogen erfährst du, wie du dich selbst einschätzt und welche Unterstützung dir helfen kann.
+  </p>
+  <p>
+    Du beantwortest Fragen dazu, ob du zum Beispiel
+    <ul>
+      <li>klare Struktur und Routinen brauchst,</li>
+      <li>Erinnerungen oder Hilfestellungen wünschst,</li>
+      <li>Impulse gut steuern kannst oder Pausen brauchst,</li>
+      <li>positives Feedback motiviert oder du eher allein arbeitest,</li>
+      <li>und wie du auf Veränderungen oder Konflikte reagierst.</li>
+    </ul>
+  </p>
+  <p>
+    Deine Betreuer*innen füllen denselben Bogen als <strong>Fremdeinschätzung</strong> aus –  
+    sie nehmen dich wahr als Mitbewohner*in in der Wohngruppe oder als Kolleg*in am Arbeitsplatz.  
+    So kannst du dein Selbstbild mit dem Bild der Betreuer*innen vergleichen.
+  </p>
+  <p>
+    Denke beim Ausfüllen an konkrete Alltagssituationen.  
+    Wähle für jede Aussage eine Zahl von 0 („trifft gar nicht zu“) bis 4 („trifft voll zu“).  
+    Je ehrlicher du antwortest, desto nützlicher wird das Profil für dich und dein Betreuungsteam.
+  </p>
+  <p><strong>Viel Erfolg – entdecke, wo du selbständig bist und wo du Unterstützung brauchst!</strong></p>
+</div>
+
+<div class="user-inputs">
+  <label>Wen bewertest du?</label>
+  <div class="radio-group">
+    <label><input type="radio" name="modus" value="selbst" checked> Mich selbst</label>
+    <label><input type="radio" name="modus" value="fremd"> Eine andere Person</label>
+  </div>
+</div>
+
+  <!-- 🧍‍♀️ Eingabefelder für Name und E-Mail -->
+<div class="user-inputs" style="max-width: 480px; margin-bottom: 2rem;">
+  
+  <label for="name" style="font-weight: 700; display: block; margin-bottom: 0.5rem; color: var(--text-primary);">
+  Name:
+  </label>
+  <input 
+    type="text" 
+    id="name" 
+    name="name" 
+    placeholder="Dein Name"
+    style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 1.5rem;"
+  />
+
+<div class="user-inputs">
+  <!-- 1. Label mit rotem Stern -->
+  <label for="email" class="required-label">E-Mail-Adresse</label>
+
+<!-- 3. Hilfetext darunter -->
+  <p class="help-text">
+    Gib bitte deine E-Mail-Adresse ein – sie ist notwendig, um dein Ergebnis anzuzeigen.
+  </p>
+  
+  <!-- 2. Input-Feld -->
+  <input
+    type="email"
+    id="email"
+    name="email"
+    placeholder="deine@email.ch"
+    required
+  />
+</div>
+</div>
+
+<div class="user-inputs">
+  <label for="situation">Woran denke ich bei den Fragen?</label>
+  <p class="help-text">
+    Zum Beispiel: „Ich in der Wohngruppe“, „Ich bei der Arbeit“, „Ich in meiner Freizeit“ oder „Ich mit anderen Menschen“.
+  </p>
+  <textarea
+    id="situation"
+    name="situation"
+    rows="3"
+    placeholder="Beschreibe kurz, woran du denkst"
+    required
+  ></textarea>
+</div>
+
+<h1>Dein Fragebogen</h1>
+
+  <!-- 📋 Der Fragebogen -->
+  <form id="fragebogen"></form>
+
+  <!-- 🔘 Auswerten-Button (anfangs deaktiviert) -->
+  <button type="submit" form="fragebogen" id="auswertenBtn" disabled>Auswerten</button>
+
+  <!-- 🖨 Ergebnis + Druckbutton -->
+  <div id="ergebnis" style="display:none;"></div>
+  <button id="printButton" style="display:none;"> Drucken</button>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const formElem     = document.getElementById("fragebogen");
+  const ergebnisElem = document.getElementById("ergebnis");
+  const printButton  = document.getElementById("printButton");
+let attributeData = {};
+function makeFileName(name) {
+  return name
+    .toLowerCase()
+    .replaceAll("ä", "ae")
+    .replaceAll("ö", "oe")
+    .replaceAll("ü", "ue")
+    .replaceAll("ss", "ss")
+    .replaceAll(" ", "_")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+      
+      // Array der Fragen
+      const questions = [
+  {
+    frage: "Frage 1: Hilfst du gerne im Haushalt? Zum Beispiel Tisch decken oder abwaschen.",
+    frage_fremd: "Frage 1: Hilft die Person gerne im Haushalt? Zum Beispiel Tisch decken oder abwaschen.",
+    keyword: "Haushalt",
+    answers: {
+      A: { code: "S1", text: "Ja, ich helfe oft und mache es von mir aus.", text_fremd: "Die Person hilft oft und macht es von sich aus." },
+      B: { code: "S2", text: "Ich helfe, wenn man mich freundlich fragt.",        text_fremd: "Die Person hilft, wenn man sie freundlich fragt." },
+      C: { code: "R1", text: "Ich helfe nur, wenn man es mir direkt sagt.",      text_fremd: "Die Person hilft nur, wenn man es ihr direkt sagt." },
+      D: { code: "R2", text: "Ich helfe nicht gerne und ziehe mich zurück.",     text_fremd: "Die Person hilft nicht gerne und zieht sich zurück." }
+    }
+  },
+  {
+    frage: "Frage 2: Wie reagierst du bei Streit in deiner Wohngruppe?",
+    frage_fremd: "Frage 2: Wie reagiert die Person bei Streit in ihrer Wohngruppe?",
+    keyword: "Streit",
+    answers: {
+      A: { code: "S3", text: "Ich rede mit allen und versuche zu helfen.",            text_fremd: "Die Person redet mit allen und versucht zu helfen." },
+      B: { code: "S4", text: "Ich bleibe neutral und schaue zu.",                    text_fremd: "Die Person bleibt neutral und schaut zu." },
+      C: { code: "R3", text: "Ich ziehe mich zurück und gehe weg.",                  text_fremd: "Die Person zieht sich zurück und geht weg." },
+      D: { code: "R4", text: "Ich werde wütend und mache den Streit schlimmer.",     text_fremd: "Die Person wird wütend und macht den Streit schlimmer." }
+    }
+  },
+  {
+    frage: "Frage 3: Was motiviert dich, ein neues Hobby oder eine Aufgabe weiterzumachen?",
+    frage_fremd: "Frage 3: Was motiviert die Person, ein neues Hobby oder eine Aufgabe weiterzumachen?",
+    keyword: "Motivation",
+    answers: {
+      A: { code: "S5", text: "Ich mag klare Ziele und freue mich über kleine Erfolge.", text_fremd: "Die Person mag klare Ziele und freut sich über kleine Erfolge." },
+      B: { code: "S6", text: "Ich brauche immer wieder Lob von anderen.",              text_fremd: "Die Person braucht immer wieder Lob von anderen." },
+      C: { code: "R5", text: "Ich mag knifflige Aufgaben und Abwechslung.",            text_fremd: "Die Person mag knifflige Aufgaben und Abwechslung." },
+      D: { code: "R6", text: "Ich bin motiviert, wenn ich schnell Ergebnisse sehe.",    text_fremd: "Die Person ist motiviert, wenn sie schnell Ergebnisse sieht." }
+    }
+  },
+  {
+    frage: "Frage 4: Wie gehst du mit unerwarteten Änderungen im Tagesablauf um?",
+    frage_fremd: "Frage 4: Wie geht die Person mit unerwarteten Änderungen im Tagesablauf um?",
+    keyword: "Tagesablauf",
+    answers: {
+      A: { code: "S7", text: "Ich bleibe ruhig und passe mich schnell an.",                      text_fremd: "Die Person bleibt ruhig und passt sich schnell an." },
+      B: { code: "S8", text: "Ich schaue erst genau hin und überlege dann.",                     text_fremd: "Die Person schaut erst genau hin und überlegt dann." },
+      C: { code: "R7", text: "Ich brauche etwas Zeit und mache Schritt für Schritt weiter.",      text_fremd: "Die Person braucht etwas Zeit und macht Schritt für Schritt weiter." },
+      D: { code: "R8", text: "Ich handle spontan und reagiere schnell.",                         text_fremd: "Die Person handelt spontan und reagiert schnell." }
+    }
+  },
+  {
+    frage: "Frage 5: In welcher Umgebung fühlst du dich am wohlsten?",
+    frage_fremd: "Frage 5: In welcher Umgebung fühlt sich die Person am wohlsten?",
+    keyword: "Umgebung",
+    answers: {
+      A: { code: "S9",  text: "Ich mag es ruhig und ordentlich.",                                         text_fremd: "Die Person mag es ruhig und ordentlich." },
+      B: { code: "S10", text: "Ich mag lebhafte Orte mit viel Austausch.",                                 text_fremd: "Die Person mag lebhafte Orte mit viel Austausch." },
+      C: { code: "R11", text: "Ich mag Orte mit neuen und ungewöhnlichen Reizen.",                       text_fremd: "Die Person mag Orte mit neuen und ungewöhnlichen Reizen." },
+      D: { code: "R12", text: "Ich mag Orte, wo alles schnell und klar ist.",                            text_fremd: "Die Person mag Orte, wo alles schnell und klar ist." }
+    }
+  },
+  {
+    frage: "Frage 6: Wie triffst du Entscheidungen, wenn du unsicher bist?",
+    frage_fremd: "Frage 6: Wie trifft die Person Entscheidungen, wenn sie unsicher ist?",
+    keyword: "Entscheidungen",
+    answers: {
+      A: { code: "S11", text: "Ich frage andere und suche eine gemeinsame Lösung.",               text_fremd: "Die Person fragt andere und sucht eine gemeinsame Lösung." },
+      B: { code: "S12", text: "Ich bleibe bei Bewährtem und riskiere nichts.",                    text_fremd: "Die Person bleibt bei Bewährtem und riskiert nichts." },
+      C: { code: "R9",  text: "Ich entscheide schnell und handle dann sofort.",                   text_fremd: "Die Person entscheidet schnell und handelt dann sofort." },
+      D: { code: "R10", text: "Ich vertraue meinem Gefühl und handle spontan.",                   text_fremd: "Die Person vertraut ihrem Gefühl und handelt spontan." }
+    }
+  },
+  {
+    frage: "Frage 7: Welche Rolle übernimmst du bei gemeinsamen Aktivitäten? Zum Beispiel Spiel oder Ausflug.",
+    frage_fremd: "Frage 7: Welche Rolle übernimmt die Person bei gemeinsamen Aktivitäten? Zum Beispiel Spiel oder Ausflug.",
+    keyword: "Rolle",
+    answers: {
+      A: { code: "S13", text: "Ich bin kreativ und probiere gern vieles aus.",                  text_fremd: "Die Person ist kreativ und probiert gern vieles aus." },
+      B: { code: "S14", text: "Ich treffe Entscheidungen und übernehme Verantwortung.",       text_fremd: "Die Person trifft Entscheidungen und übernimmt Verantwortung." },
+      C: { code: "R15", text: "Ich schaue zu und helfe aus dem Hintergrund.",                  text_fremd: "Die Person schaut zu und hilft aus dem Hintergrund." },
+      D: { code: "R16", text: "Ich rede viel mit und gebe Rückmeldungen.",                     text_fremd: "Die Person redet viel mit und gibt Rückmeldungen." }
+    }
+  },
+  {
+    frage: "Frage 8: Nimmst du deine Medikamente zuverlässig ein?",
+    frage_fremd: "Frage 8: Nimmt die Person ihre Medikamente zuverlässig ein?",
+    keyword: "Medikamente",
+    answers: {
+      A: { code: "S15", text: "Ich nehme meine Medikamente immer pünktlich ein.",                          text_fremd: "Die Person nimmt Medikamente immer pünktlich ein." },
+      B: { code: "S16", text: "Ich brauche manchmal eine Erinnerung.",                                     text_fremd: "Die Person braucht manchmal eine Erinnerung." },
+      C: { code: "R13", text: "Ich achte bewusst auf meine Medikamente und setze Prioritäten.",           text_fremd: "Die Person achtet bewusst auf ihre Medikamente und setzt Prioritäten." },
+      D: { code: "R14", text: "Ich vergesse manchmal meine Medikamente.",                                  text_fremd: "Die Person vergisst manchmal ihre Medikamente." }
+    }
+  },
+  {
+    frage: "Frage 9: Wie gehst du mit Rückmeldungen von Betreuenden um?",
+    frage_fremd: "Frage 9: Wie geht die Person mit Rückmeldungen von Betreuenden um?",
+    keyword: "Feedback",
+    answers: {
+      A: { code: "S17", text: "Ich bin offen und setze die Tipps um.",                              text_fremd: "Die Person ist offen und setzt die Tipps um." },
+      B: { code: "S18", text: "Ich bleibe bei meiner Meinung, höre aber zu.",                       text_fremd: "Die Person bleibt bei ihrer Meinung, hört aber zu." },
+      C: { code: "R19", text: "Ich denke darüber nach und lerne daraus.",                           text_fremd: "Die Person denkt darüber nach und lernt daraus." },
+      D: { code: "R20", text: "Ich nehme es ruhig an und versuche, mich zu verbessern.",             text_fremd: "Die Person nimmt es ruhig an und versucht, sich zu verbessern." }
+    }
+  },
+  {
+    frage: "Frage 10: Welche Rolle übernimmst du in einem Wohnprojekt? Zum Beispiel Gartenarbeit.",
+    frage_fremd: "Frage 10: Welche Rolle übernimmt die Person in einem Wohnprojekt? Zum Beispiel Gartenarbeit.",
+    keyword: "Wohnprojekt",
+    answers: {
+      A: { code: "S19", text: "Ich helfe mutig vorne mit und leite mit.",                           text_fremd: "Die Person hilft mutig vorne mit und leitet mit." },
+      B: { code: "S20", text: "Ich achte auf Details und mache alles genau.",                      text_fremd: "Die Person achtet auf Details und macht alles genau." },
+      C: { code: "R21", text: "Ich bringe neue Ideen und Visionen ein.",                           text_fremd: "Die Person bringt neue Ideen und Visionen ein." },
+      D: { code: "R22", text: "Ich arbeite ruhig und zuverlässig.",                                text_fremd: "Die Person arbeitet ruhig und zuverlässig." }
+    }
+  },
+  {
+    frage: "Frage 11: Wie planst du längere Ausflüge oder Termine?",
+    frage_fremd: "Frage 11: Wie plant die Person längere Ausflüge oder Termine?",
+    keyword: "Planung",
+    answers: {
+      A: { code: "S21", text: "Ich plane energisch und denke voraus.",                              text_fremd: "Die Person plant energisch und denkt voraus." },
+      B: { code: "S22", text: "Ich bleibe flexibel, verliere mein Ziel aber nicht aus den Augen.", text_fremd: "Die Person bleibt flexibel, verliert ihr Ziel aber nicht aus den Augen." },
+      C: { code: "R17", text: "Ich behalte den Überblick und habe klare Vorstellungen.",          text_fremd: "Die Person behält den Überblick und hat klare Vorstellungen." },
+      D: { code: "R18", text: "Ich bleibe ruhig und lasse mich nicht stressen.",                   text_fremd: "Die Person bleibt ruhig und lässt sich nicht stressen." }
+    }
+  },
+  {
+    frage: "Frage 12: Wie reagierst du unter Zeitdruck?",
+    frage_fremd: "Frage 12: Wie reagiert die Person unter Zeitdruck?",
+    keyword: "Zeitdruck",
+    answers: {
+      A: { code: "S23", text: "Ich bleibe ruhig und erledige Schritt für Schritt.",               text_fremd: "Die Person bleibt ruhig und erledigt Schritt für Schritt." },
+      B: { code: "S24", text: "Ich ziehe mich zurück und arbeite still weiter.",                  text_fremd: "Die Person zieht sich zurück und arbeitet still weiter." },
+      C: { code: "R25", text: "Ich arbeite systematisch, damit ich keine Fehler mache.",         text_fremd: "Die Person arbeitet systematisch, damit sie keine Fehler macht." },
+      D: { code: "R26", text: "Ich mache schnell weiter und gebe mein Bestes.",                   text_fremd: "Die Person macht schnell weiter und gibt ihr Bestes." }
+    }
+  },
+  {
+    frage: "Frage 13: Welche Stärke zeigst du im Alltag am meisten?",
+    frage_fremd: "Frage 13: Welche Stärke zeigt die Person im Alltag am meisten?",
+    keyword: "Stärke",
+    answers: {
+      A: { code: "S25", text: "Ich bin kreativ und habe oft neue Ideen.",                       text_fremd: "Die Person ist kreativ und hat oft neue Ideen." },
+      B: { code: "S26", text: "Ich bin stark und gehe Herausforderungen an.",                   text_fremd: "Die Person ist stark und geht Herausforderungen an." },
+      C: { code: "R23", text: "Ich passe mich an und bleibe flexibel.",                         text_fremd: "Die Person passt sich an und bleibt flexibel." },
+      D: { code: "R24", text: "Ich arbeite im Team und helfe anderen.",                         text_fremd: "Die Person arbeitet im Team und hilft anderen." }
+    }
+  },
+  {
+    frage: "Frage 14: Welche Kombination passt am besten zu dir?",
+    frage_fremd: "Frage 14: Welche Kombination passt am besten zur Person?",
+    keyword: "Mix",
+    answers: {
+      A: { code: "C1", text: "Ich bin fleissig, flexibel und visionär.",                         text_fremd: "Die Person ist fleissig, flexibel und visionär." },
+      B: { code: "C2", text: "Ich bin robust, unabhängig und packe gerne an.",                 text_fremd: "Die Person ist robust, unabhängig und packt gerne an." },
+      C: { code: "C3", text: "Ich bin gelassen, weise und denke strategisch.",                  text_fremd: "Die Person ist gelassen, weise und denkt strategisch." },
+      D: { code: "C4", text: "Ich bin provokant, loyal und spontan.",                            text_fremd: "Die Person ist provokant, loyal und spontan." }
+    }
+  },
+  {
+    frage: "Frage 15: In welchen Bereichen möchtest du dich weiterentwickeln?",
+    frage_fremd: "Frage 15: In welchen Bereichen möchte sich die Person weiterentwickeln?",
+    keyword: "Weiterentwicklung",
+    answers: {
+      A: { code: "C1", text: "Ich möchte lernen, loszulassen und weniger zu kontrollieren.",          text_fremd: "Die Person möchte lernen, loszulassen und weniger zu kontrollieren." },
+      B: { code: "C2", text: "Ich möchte geduldiger sein und meine Impulse besser kontrollieren.", text_fremd: "Die Person möchte geduldiger sein und ihre Impulse besser kontrollieren." },
+      C: { code: "C3", text: "Ich möchte mutigere Entscheidungen treffen.",                         text_fremd: "Die Person möchte mutigere Entscheidungen treffen." },
+      D: { code: "C4", text: "Ich möchte meine Spontanität planen und meine Gefühle kontrollieren.", text_fremd: "Die Person möchte ihre Spontanität planen und ihre Gefühle kontrollieren." 
+      }
+    }
+  }
+];
+
+  // 1) renderQuestions-Funktion
+  function renderQuestions() {
+    formElem.innerHTML = ""; // altes löschen
+
+    const modus = document.querySelector('input[name="modus"]:checked').value;
+    questions.forEach((q, index) => {
+      const box = document.createElement("div");
+      box.className = "frage-box";
+
+      // Frage je nach Modus
+      let frageText = modus === "fremd" ? q.frage_fremd : q.frage;
+      if (q.keyword) {
+        frageText = frageText.replace(
+          new RegExp(`(${q.keyword})`, 'gi'),
+          '<strong>$1</strong>'
+        );
+      }
+      box.innerHTML = `<h2><strong>${frageText}</strong></h2>`;
+
+      // Antworten
+      Object.entries(q.answers).forEach(([key, ans]) => {
+        const div = document.createElement("div");
+        div.className = "skala-antwort";
+
+let radios = `<div class="radio-group">`;
+for (let i = 0; i <= 4; i++) {
+  radios += `
+    <label class="radio-option">
+      <input type="radio"
+             name="frage${index}_${ans.code}"
+             value="${i}"
+             required />
+      <div class="radio-label">${i}</div>
+    </label>`;
+}
+radios += `</div>`;
+
+        const ansText = modus === "fremd" ? ans.text_fremd : ans.text;
+        div.innerHTML = `<p><strong>${key}:</strong> ${ansText}</p>${radios}`;
+        box.appendChild(div);
+      });
+
+      formElem.appendChild(box);
+    });
+  }
+
+  // 3) Initiales Rendering + Umschalten per Radio
+   renderQuestions();
+  document.querySelectorAll('input[name="modus"]')
+          .forEach(r => r.addEventListener('change', renderQuestions));
+
+
+      // Definiere hier zuerst das Mapping der Tierdaten:
+      const animalProperties = {
+        "Ameise": {
+          staerken: [
+            "fleissig", "loyal", "engagiert", "gebietsorientiert",
+            "instinktiv", "geschäftig", "hart arbeitend", "auf den moment fokussiert"
+          ],
+          schwaechen: [
+            "empfindsam", "denkend", "logisch", "entscheidungsfreudig",
+            "individualistisch", "selbstbewusst", "visionär", "reflektierend"
+          ]
+        },
+        "Biene": {
+          staerken: [
+            "fleissig", "teamorientiert", "kommunikativ", "gebietsorientiert",
+            "wissend", "hart arbeitend", "kooperativ", "sozial", "organisiert",
+            "intelligent", "loyal", "fürsorglich", "aggressiv"
+          ],
+          schwaechen: [
+            "sich selbst bewusst", "individualistisch", "leichtgläubig",
+            "politisch", "reflektierend", "langsam"
+          ]
+        },
+        "Chamäleon": {
+          staerken: [
+            "doppelzüngig", "schlau", "manipulativ", "schwach",
+            "politisch", "intelligent"
+          ],
+          schwaechen: [
+            "treu", "vertrauenswürdig", "konsistent", "zuversichtlich",
+            "herausfordernd", "handlungsorientiert"
+          ]
+        },
+        "Hund": {
+          staerken: [
+            "treu", "vertrauensvoll", "begeistert", "ungestüm",
+            "leichtgläubig", "energiegeladen", "zuverlässig", "vorhersehbar",
+            "glücklich", "spielerisch", "produktiv", "vertrauenswürdig"
+          ],
+          schwaechen: [
+            "sorgfältig", "ernst", "nachdenklich", "denkend", "schlau"
+          ]
+        },
+        "Adler": {
+          staerken: [
+            "visionär", "stark", "fokussiert", "inspirierend", "zuversichtlich",
+            "intelligent", "produktiv", "entschlussfreudig", "ausgeglichen",
+            "scharf", "handlungsorientiert", "offen", "vertrauenswürdig", "intuitiv",
+            "aggressiv", "verantwortlich", "holistisch", "extravertiert", "respektiert"
+          ],
+          schwaechen: [
+            "zögernd", "emotional", "schwach", "zurückgezogen", "schüchtern", "langsam"
+          ]
+        },
+        "Katze": {
+          staerken: [
+            "individualistisch", "eifrig", "distanziert", "eitel",
+            "egoistisch", "frustrierend", "arrogant", "eingebildet"
+          ],
+          schwaechen: [
+            "kontaktfreudig", "freundlich", "fürsorglich", "teamorientiert",
+            "gemeinschaftsorientiert", "interessant"
+          ]
+        },
+        "Gibbon": {
+          staerken: [
+            "fröhlich", "spielerisch", "lebhaft", "kontaktfreudig", "cool",
+            "begeistert", "lustig", "interessant", "rebellisch"
+          ],
+          schwaechen: [
+            "vorsichtig", "ernst", "produktiv", "zukunftsorientiert", "fokussiert"
+          ]
+        },
+        "Hyäne": {
+          staerken: [
+            "aggressiv", "intrigant", "kontrollierend", "manipulativ",
+            "teamorientiert", "stark", "politisch", "opportunistisch"
+          ],
+          schwaechen: [
+            "vertrauenswürdig", "fürsorglich", "rücksichtsvoll", "intuitiv", "schüchtern"
+          ]
+        },
+        "Insekt_nützlich": {
+  "staerken": [
+    "unterstützend", 
+    "einfallsreich", 
+    "zukunftsorientiert", 
+    "teamorientiert", 
+    "hilfreich", 
+    "produktiv", 
+    "positiv", 
+    "vorausschauend"
+  ],
+  "schwaechen": [
+    "zögerlich", 
+    "langsam", 
+    "überangepasst", 
+    "wenig sichtbar", 
+    "emotionsfern"
+  ]
+},
+"Insekt_lästig": {
+  "staerken": [
+    "allgegenwärtig", 
+    "eigennützig", 
+    "unberechenbar", 
+    "durchsetzungsstark", 
+    "ausdauernd", 
+    "resistent"
+  ],
+  "schwaechen": [
+    "egoistisch", 
+    "nützlich", 
+    "fürsorglich", 
+    "produktiv", 
+    "bescheiden", 
+    "vertrauenswürdig"
+  ]
+        },
+        "Schakal": {
+          staerken: [
+            "gebietsorientiert", "verteidigungseifrig", "sozial", "aggressiv",
+            "kontrollierend", "lebhaft", "eifersüchtig", "lebenslustig", "loyal", "fürsorglich"
+          ],
+          schwaechen: [
+            "geduldig", "tolerant", "schüchtern", "zurückgezogen", "fürsorglich"
+          ]
+        },
+        "Kind": {
+          staerken: [
+            "naiv", "verspielt", "energisch", "motiviert", "entbehrlich", "begeistert", "jugendlich"
+          ],
+          schwaechen: [
+            "erfahren", "zuverlässig", "kenntnisreich", "hart im Nehmen", "pfiffig"
+          ]
+        },
+        "Löwe": {
+          staerken: [
+            "stark", "machtorientiert", "aggressiv", "kontrollierend",
+            "gebietsorientiert", "faul", "eigennützig", "manipulativ", "zuversichtlich"
+          ],
+          schwaechen: [
+            "engagiert", "fleissig", "fürsorglich", "schüchtern", "emotional"
+          ]
+        },
+        "Maus": {
+          staerken: [
+            "eifrig", "produktiv", "wirtschaftlich", "zuverlässig", "begeistert",
+            "unsichtbar", "beschäftigt", "individualistisch", "intelligent"
+          ],
+          schwaechen: [
+            "faul", "extrovertiert", "eigennützig", "aggressiv", "emotional"
+          ]
+        },
+        "Parasit": {
+          staerken: [
+            "faul", "parasitär", "abhängig", "eigennützig", "unsichtbar"
+          ],
+          schwaechen: [
+            "gemeinschaftsorientiert", "produktiv", "freundlich", "rücksichtsvoll", "nützlich"
+          ]
+        },
+        "Eule": {
+          staerken: [
+            "weise", "engagiert", "hilfsbereit", "respektiert", "kenntnisreich",
+            "logisch", "scharf", "zuversichtlich", "ruhig", "gemeinschaftsorientiert"
+          ],
+          schwaechen: [
+            "faul", "extrovertiert", "egozentrisch", "ehrgeizig", "aggressiv"
+          ]
+        },
+        "Piranha": {
+          staerken: [
+            "aggressiv", "räuberisch", "gefährlich", "egoistisch", "frustrierend",
+            "ausschwärmend", "eigennützig"
+          ],
+          schwaechen: [
+            "freundlich", "vertrauenswürdig", "zugänglich", "glücklich", "vertrauensvoll",
+            "aufrichtig", "individualistisch", "vorausdenkend"
+          ]
+        },
+        "Eiche": {
+          staerken: [
+            "kenntnisreich", "entscheidungsfreudig", "intelligent", "erfahren",
+            "stimulierend", "inspirierend", "begeistert", "wie eltern", "zuverlässig",
+            "menschenfreundlich", "zugänglich", "selten"
+          ],
+          schwaechen: [
+            "egoistisch", "desinteressiert", "faul", "emotional", "aggressiv"
+          ]
+        },
+        "Klapperschlange": {
+          staerken: [
+            "politisch", "gerissen", "defensiv", "reaktiv", "unsicher", "laut",
+            "doppelzüngig", "spaltend", "überlebend", "angepasst an raue umgebungen"
+          ],
+          schwaechen: [
+            "vertrauenswürdig", "aufrichtig", "treu", "vertrauensvoll", "glücklich",
+            "kontaktfreudig", "einladend"
+          ]
+        },
+        "Faultier": {
+          staerken: [
+            "langsam", "müde", "minimalistisch", "fügsam", "faul"
+          ],
+          schwaechen: [
+            "kontaktfreudig", "eifrig", "enthusiastisch", "produktiv", "geschäftig",
+            "anpassungsfähig", "gemeinschaftsorientiert", "nützlich"
+          ]
+        },
+        "Dinosaurier": {
+          staerken: [
+            "müde", "pessimistisch", "veränderungsscheu", "fremdenfeindlich", "zurückgezogen",
+            "kampferprobt", "hart im nehmen", "negativ", "reflektierend", "nostalgisch", "problematisch"
+          ],
+          schwaechen: [
+            "visionär", "anpassungsfähig", "kooperativ", "offen", "angepasst", "scharfsinnig",
+            "gemeinschaftsorientiert", "opportunistisch", "jugendlich", "sozial"
+          ]
+        },
+        "Einhorn": {
+          staerken: [
+            "perfekt", "ehrlich", "arrogant", "unnahbar", "ehrgeizig",
+            "frustrierend", "unsicher", "kontrollierend", "gefährlich", "inkonsistent", "nostalgisch"
+          ],
+          schwaechen: [
+            "realistisch", "selbstbewusst", "offen", "stimulierend", "vertrauenswürdig",
+            "bescheiden", "ehrlich", "vorausdenkend", "motivierend"
+          ]
+        },
+        "Geier": {
+          staerken: [
+            "gemein", "angepasst", "aasfressend", "egozentrisch", "gefährlich", "opportunistisch",
+            "politisch", "wetteifernd", "schlau", "geduldig"
+          ],
+          schwaechen: [
+            "wohlwollend", "vertrauenswürdig", "glücklich", "teamorientiert", "mutig",
+            "offen", "angenehm", "sozial"
+          ]
+        },
+        "Wal": {
+          staerken: [
+            "intelligent", "inspirierend", "kenntnisreich", "mächtig", "sozial",
+            "gemeinschaftsorientiert", "selbstgrenzend", "unfallgefährdet", "zurückhaltend",
+            "behutsam", "vom aussterben bedroht"
+          ],
+          schwaechen: [
+            "anpassungsfähig", "aggressiv", "faul", "arrogant", "gefährlich", "manipulativ"
+          ]
+        },
+        "Hybrid": {
+          staerken: [
+            "arrogant", "ehrgeizig", "geschäftig", "extravertiert", "gebildet", "weitschweifig",
+            "egoistisch", "schön", "modisch", "kompetent"
+          ],
+          schwaechen: [
+            "erfahren", "vertrauenswürdig", "tolerant", "geduldig", "fürsorglich", "gründlich", "anpassungsfähig"
+          ]
+        },
+        "Yak": {
+          staerken: [
+            "stürmisch", "enthusiastisch", "taktisch", "freundlich", "frustrierend", "fröhlich",
+            "spielerisch", "energisch", "sozial", "glücklich", "fokussiert"
+          ],
+          schwaechen: [
+            "vorsichtig", "geduldig", "erfahren", "rücksichtsvoll", "zurückhaltend", "bescheiden",
+            "sanftmütig", "langsam", "strategisch", "selbstbewusst", "intelligent"
+          ]
+        }
+      };
+
+      // Initialisiere das Mapping-Objekt
+      const similarityMapping = {};
+      Object.keys(animalProperties).forEach(animal => {
+        similarityMapping[animal] = [];
+      });
+      // Vergleiche jedes Tier mit allen anderen
+      Object.keys(animalProperties).forEach(animal => {
+        Object.keys(animalProperties).forEach(otherAnimal => {
+          if (animal === otherAnimal) return; // Selbstvergleich überspringen
+          const strengthsAnimal = animalProperties[animal].staerken;
+          const strengthsOther = animalProperties[otherAnimal].staerken;
+          const commonStrengths = strengthsAnimal.filter(strength => strengthsOther.includes(strength));
+          if (commonStrengths.length > 0) {
+            similarityMapping[animal].push({
+              animal: otherAnimal,
+              commonStrengths: commonStrengths,
+              similarityScore: commonStrengths.length
+            });
+          }
+        });
+      });
+      console.log(similarityMapping);
+
+      // Definition der tierEigenschaften
+      const tierEigenschaften = {
+        "Ameise": ["Struktur", "Sozialverhalten"],
+        "Biene": ["Struktur", "Sozialverhalten"],
+        "Chamäleon": ["Flexibilität", "Strategie"],
+        "Hund": ["Empathie", "Sozialverhalten"],
+        "Adler": ["Strategie", "Durchsetzung"],
+        "Katze": ["Strategie", "Flexibilität"],
+        "Gibbon": ["Kreativität", "Sozialverhalten"],
+        "Hyäne": ["Durchsetzung", "Strategie"],
+        "Insekt_nützlich": ["Empathie", "Kreativität"],
+        "Insekt_lästig": ["Flexibilität", "Durchsetzung"],
+        "Schakal": ["Durchsetzung", "Sozialverhalten"],
+        "Löwe": ["Durchsetzung", "Strategie"],
+        "Maus": ["Struktur", "Emotionale Stabilität"],
+        "Parasit": ["Flexibilität", "Strategie"],
+        "Eule": ["Strategie", "Empathie"],
+        "Piranha": ["Durchsetzung", "Flexibilität"],
+        "Eiche": ["Struktur", "Emotionale Stabilität"],
+        "Klapperschlange": ["Strategie", "Flexibilität"],
+        "Faultier": ["Emotionale Stabilität", "Struktur"],
+        "Dinosaurier": ["Struktur", "Emotionale Stabilität"],
+        "Einhorn": ["Kreativität", "Empathie"],
+        "Geier": ["Strategie", "Flexibilität"],
+        "Wal": ["Empathie", "Emotionale Stabilität"],
+        "Hybrid": ["Kreativität", "Durchsetzung"],
+        "Yak": ["Sozialverhalten", "Emotionale Stabilität"],
+        "Kind": ["Kreativität", "Empathie"]
+      };
+
+      // Mapping CODE -> Tier
+      const codeToTier = {
+        S1: "Adler",   S2: "Ameise",   R1: "Yak",     R2: "Katze",
+        S3: "Biene",   S4: "Chamäleon", R3: "Parasit", R4: "Wal",
+        S5: "Dinosaurier", S6: "Einhorn", R5: "Schakal", R6: "Piranha",
+        S7: "Eiche",   S8: "Eule",     R7: "Maus",    R8: "Löwe",
+        S9: "Faultier", S10: "Geier",   R11: "Insekt_lästig", R12: "Insekt_nützlich",
+        S11: "Gibbon", S12: "Hund",    R9: "Klapperschlange", R10: "Kind",
+        S13: "Hybrid", S14: "Hyäne",   R15: "Hund",   R16: "Gibbon",
+        S15: "Insekt_nützlich", S16: "Insekt_lästig", R13: "Hyäne", R14: "Hybrid",
+        S17: "Kind",   S18: "Klapperschlange", R19: "Eule", R20: "Eiche",
+        S19: "Löwe",   S20: "Maus",    R21: "Einhorn", R22: "Dinosaurier",
+        S21: "Piranha", S22: "Schakal", R17: "Geier",  R18: "Faultier",
+        S23: "Wal",    S24: "Parasit", R25: "Ameise", R26: "Adler",
+        S25: "Katze",  S26: "Yak",     R23: "Chamäleon", R24: "Biene"
+      };
+
+      // Antwortkombinationen für Frage 14 und 15
+      const comboMapping = {
+        C1: ["Adler", "Ameise", "Biene", "Chamäleon", "Wal", "Einhorn"],
+        C2: ["Yak", "Katze", "Parasit", "Dinosaurier", "Schakal", "Piranha"],
+        C3: ["Eiche", "Eule", "Maus", "Löwe", "Faultier", "Geier", "Hybrid"],
+        C4: ["Insekt_lästig", "Insekt_nützlich", "Klapperschlange", "Kind", "Hyäne", "Hund", "Gibbon"]
+      };
+
+      // Tier-Beschreibungen
+      // Tier-Beschreibungen in einfacher Sprache
+const tierTexte = {
+  "Ameise": {
+    kurz: "Ich arbeite gern im Team und plane Dinge.",
+    symbolischFür: "Zusammenarbeit"
+  },
+  "Biene": {
+    kurz: "Ich arbeite fleissig und helfe anderen.",
+    symbolischFür: "Hilfe"
+  },
+  "Chamäleon": {
+    kurz: "Ich passe mich leicht an neue Situationen an.",
+    symbolischFür: "Anpassung"
+  },
+  "Hund": {
+    kurz: "Ich bin freundlich und treu.",
+    symbolischFür: "Freundschaft"
+  },
+  "Adler": {
+    kurz: "Ich sehe das grosse Ganze und plane gern.",
+    symbolischFür: "Weitblick"
+  },
+  "Katze": {
+    kurz: "Ich mag meine Freiheit und denke gern selbst nach.",
+    symbolischFür: "Unabhängigkeit"
+  },
+  "Gibbon": {
+    kurz: "Ich rede gern und höre gut zu.",
+    symbolischFür: "Kommunikation"
+  },
+  "Hyäne": {
+    kurz: "Ich setze mir Ziele und arbeite hart.",
+    symbolischFür: "Zielstrebigkeit"
+  },
+  "Insekt_nützlich": {
+    kurz: "Ich helfe gern und finde einfache Lösungen.",
+    symbolischFür: "Hilfsbereitschaft"
+  },
+  "Insekt_lästig": {
+    kurz: "Ich gebe nicht auf und bleibe dran.",
+    symbolischFür: "Ausdauer"
+  },
+  "Schakal": {
+    kurz: "Ich entscheide gern selbst und bin unabhängig.",
+    symbolischFür: "Selbstbestimmung"
+  },
+  "Löwe": {
+    kurz: "Ich führe gern und bin stark.",
+    symbolischFür: "Stärke"
+  },
+  "Maus": {
+    kurz: "Ich bin vorsichtig und verlässlich.",
+    symbolischFür: "Sicherheit"
+  },
+  "Parasit": {
+    kurz: "Ich passe mich gut an und bleibe ruhig im Hintergrund.",
+    symbolischFür: "Tarnung"
+  },
+  "Eule": {
+    kurz: "Ich denke gern nach und gebe gute Ratschläge.",
+    symbolischFür: "Weisheit"
+  },
+  "Piranha": {
+    kurz: "Ich handle schnell, wenn es nötig ist.",
+    symbolischFür: "Entschlossenheit"
+  },
+  "Eiche": {
+    kurz: "Ich bin stark und gebe Halt.",
+    symbolischFür: "Stabilität"
+  },
+  "Klapperschlange": {
+    kurz: "Ich bin vorsichtig und schlau.",
+    symbolischFür: "Schlauheit"
+  },
+  "Faultier": {
+    kurz: "Ich nehme mir Zeit und bleibe ruhig.",
+    symbolischFür: "Gelassenheit"
+  },
+  "Dinosaurier": {
+    kurz: "Ich bleibe meiner Art treu und bin stark.",
+    symbolischFür: "Uralte Stärke"
+  },
+  "Einhorn": {
+    kurz: "Ich habe viele Ideen und träume gern.",
+    symbolischFür: "Träumerei"
+  },
+  "Geier": {
+    kurz: "Ich schaue voraus und treffe kluge Entscheidungen.",
+    symbolischFür: "Voraussicht"
+  },
+  "Wal": {
+    kurz: "Ich bin stark und fühle viel.",
+    symbolischFür: "Tiefe"
+  },
+  "Hybrid": {
+    kurz: "Ich kann viel und lerne gern Neues.",
+    symbolischFür: "Vielseitigkeit"
+  },
+  "Yak": {
+    kurz: "Ich arbeite lange und gebe nicht auf.",
+    symbolischFür: "Ausdauer"
+  },
+  "Kind": {
+    kurz: "Ich spiele gern und freue mich schnell.",
+    symbolischFür: "Freude"
+  }
+};
+
+      // Gegenspieler-Logik
+      const gegenspieler = {
+        "Adler": "Kind",
+        "Kind": "Adler",
+        "Ameise": "Hybrid",
+        "Hybrid": "Ameise",
+        "Biene": "Hyäne",
+        "Hyäne": "Biene",
+        "Chamäleon": "Eule",
+        "Eule": "Chamäleon",
+        "Hund": "Katze",
+        "Katze": "Hund",
+        "Gibbon": "Parasit",
+        "Parasit": "Gibbon",
+        "Löwe": "Maus",
+        "Maus": "Löwe",
+        "Wal": "Schakal",
+        "Schakal": "Wal",
+        "Insekt_nützlich": "Insekt_lästig",
+        "Insekt_lästig": "Insekt_nützlich",
+        "Piranha": "Faultier",
+        "Faultier": "Piranha",
+        "Einhorn": "Geier",
+        "Geier": "Einhorn",
+        "Eiche": "Klapperschlange",
+        "Klapperschlange": "Eiche",
+        "Yak": "Dinosaurier",
+        "Dinosaurier": "Yak"
+      };
+
+      // Konflikt-Texte zwischen den Tieren
+  const tierKonflikte = {
+  "Adler": {
+    "Kind":   "Ein Adler-Typ plant gern und sieht das Grosse. Ein Kind-Typ handelt eher spontan. Das kann zu Unruhe führen.",
+    "Wal":    "Adler-Typen arbeiten schnell und zielstrebig. Wal-Typen brauchen mehr Ruhe. Hier prallen Arbeitsrhythmen aufeinander."
+  },
+  "Ameise": {
+    "Piranha":"Ameise-Typen mögen klare Abläufe. Piranha-Typen handeln eher impulsiv. Das sorgt im Alltag für Missverständnisse.",
+    "Hybrid": "Ameise-Typen folgen festen Plänen. Hybrid-Typen wechseln oft den Ansatz. Das kann zu Verunsicherung führen."
+  },
+  "Biene": {
+    "Hyäne":  "Biene-Typen helfen im Team. Hyäne-Typen arbeiten lieber allein und streng nach Ziel. Das kann zu Konflikten führen.",
+    "Dinosaurier":"Biene-Typen sind offen für andere. Dinosaurier-Typen bleiben lieber auf Distanz. Das führt zu Unstimmigkeiten."
+  },
+  "Chamäleon": {
+    "Eule":   "Chamäleon-Typen ändern oft ihre Meinung. Eule-Typen wollen klare Regeln. Das passt nicht immer zusammen.",
+    "Eiche":  "Chamäleon-Typen sind flexibel. Eiche-Typen mögen Beständigkeit. Das kann Spannungen erzeugen."
+  },
+  "Hund": {
+    "Katze":  "Hund-Typen suchen Nähe und reden gern. Katze-Typen bleiben ruhig und allein. Hier kann es an Nähe fehlen.",
+    "Parasit":"Hund-Typen sind offen. Parasit-Typen verhalten sich vorsichtig und zurückhaltend. Das führt zu Missverständnissen."
+  },
+  "Katze": {
+    "Hund":   "Siehe oben: Nähe versus Distanz kann immer zu Konflikten führen.",
+    "Gibbon": "Katze-Typen mögen Ruhe. Gibbon-Typen reden viel. Das stört manchmal den Alltag."
+  },
+  "Gibbon": {
+    "Yak":    "Gibbon-Typen sprechen viel. Yak-Typen arbeiten lieber still und langsam. Das kann zu Reibereien führen.",
+    "Parasit":"Gibbon-Typen sind direkt. Parasit-Typen agieren taktisch. Hier fehlt manchmal klare Kommunikation."
+  },
+  "Hyäne": {
+    "Einhorn": "Hyäne-Typen arbeiten zielstrebig. Einhorn-Typen träumen viel. Das kann im Alltag aneinander vorbeigehen.",
+    "Biene":  "Hyäne-Typen machen ihr Ding. Biene-Typen wollen im Team arbeiten. Das führt zu Meinungsverschiedenheiten."
+  },
+  "Insekt_nützlich": {
+    "Parasit":"Das nützliche Insekt hilft gern. Parasit-Typen sind eher zurückhaltend und nutzen Gelegenheiten. Das führt zu Frust.",
+    "Klapperschlange":"Hilfsbereitschaft versus kritische Impulse kann verwirren."
+  },
+  "Insekt_lästig": {
+    "Kind":   "Insekt_lästig-Typen stören mit Hartnäckigkeit. Kind-Typen sind emotional. Das kann überfordern.",
+    "Hund":   "Insekt_lästig provoziert, Hund-Typen suchen Harmonie. Das passt nicht zusammen."
+  },
+  "Schakal": {
+    "Wal":    "Schakal-Typen sind taktisch und laut. Wal-Typen sind ruhig und tief. Das führt zu Spannungen.",
+    "Kind":   "Schakal-Typen planen oft. Kind-Typen handeln spontan. Das stört den Tagesablauf."
+  },
+  "Löwe": {
+    "Maus":   "Löwe-Typen sind dominant. Maus-Typen ziehen sich zurück. Das erzeugt Distanz im Team.",
+    "Eule":   "Löwe trifft schnell Entscheidungen. Eule denkt erst nach. Das kann das Tempo stören."
+  },
+  "Maus": {
+    "Hyäne":  "Maus-Typen sind vorsichtig. Hyäne-Typen fordern viel. Das kann die Maus überfordern.",
+    "Löwe":   "Siehe oben: Vorsicht versus Dominanz führt zu Spannungen."
+  },
+  "Parasit": {
+    "Wal":    "Parasit-Typen handeln oft ruhig im Hintergrund. Wal-Typen sind klar und offen. Das führt zu Missverständnissen.",
+    "Gibbon": "Parasit-Typen agieren subtil. Gibbon-Typen sprechen direkt. Das passt oft nicht zusammen."
+  },
+  "Wal": {
+    "Schakal":"Wal-Typen brauchen Ruhe. Schakal-Typen sind taktisch aktiv. Das stört die Balance.",
+    "Kind":   "Wal-Typen sind gelassen. Kind-Typen handeln lebhaft. Das kann überfordern."
+  },
+  "Dinosaurier": {
+    "Einhorn":"Dinosaurier-Typen mögen Sicherheit. Einhorn-Typen träumen viel. Das führt zu Unstimmigkeiten.",
+    "Chamäleon":"Dinosaurier bleiben konstant. Chamäleon wechselt oft. Das verwirrt im Alltag."
+  },
+  "Einhorn": {
+    "Hyäne":  "Einhorn-Typen sind idealistisch. Hyäne-Typen sind zielorientiert. Das passt selten zusammen.",
+    "Klapperschlange":"Einhorn-Typen mögen Harmonie. Klapperschlange-Typen geben direkte Impulse. Das kann stören."
+  },
+  "Eiche": {
+    "Chamäleon":"Eiche-Typen mögen Konstanz. Chamäleon-Typen wechseln schnell. Das führt zu Verwirrung.",
+    "Piranha":"Eiche-Typen planen sorgfältig. Piranha-Typen handeln schnell. Das passt nicht zusammen."
+  },
+  "Eule": {
+    "Hyäne":  "Eule-Typen denken genau nach. Hyäne-Typen handeln schnell. Das stört das Timing.",
+    "Kind":   "Eule-Typen wägen ab. Kind-Typen handeln impulsiv. Das führt zu Reibungen."
+  },
+  "Klapperschlange": {
+    "Wal":    "Klapperschlange-Typen sind direkt. Wal-Typen brauchen Geduld. Das führt zu Konflikten.",
+    "Kind":   "Klapperschlange plant. Kind ist spontan. Das stört den Ablauf."
+  },
+  "Faultier": {
+    "Adler":  "Faultier-Typen arbeiten langsam. Adler-Typen wollen hoch hinaus. Das passt nicht zusammen.",
+    "Piranha":"Faultier-Typen brauchen Zeit. Piranha-Typen handeln schnell. Da entsteht Stress."
+  },
+  "Geier": {
+    "Chamäleon":"Geier-Typen sind vorausschauend. Chamäleon-Typen ändern oft ihre Meinung. Das führt zu Unsicherheit.",
+    "Kind":   "Geier-Typen denken langfristig. Kind-Typen leben im Hier und Jetzt. Das stört die Planung."
+  },
+  "Piranha": {
+    "Eule":   "Piranha-Typen treffen rasch Entscheidungen. Eule-Typen analysieren erst. Das passt selten zusammen.",
+    "Faultier":"Piranha-Typen sind schnell. Faultier-Typen sind langsam. Das erzeugt Ungleichgewicht."
+  },
+  "Kind": {
+    "Adler":  "Kind-Typen handeln impulsiv. Adler-Typen planen. Das führt oft zu Verwirrung.",
+    "Geier":  "Kind-Typen leben hier und jetzt. Geier-Typen planen langfristig. Das stört die Zusammenarbeit."
+  },
+  "Yak": {
+    "Piranha":"Yak-Typen sind bedacht. Piranha-Typen handeln schnell. Das kann Stress erzeugen.",
+    "Kind":   "Yak-Typen brauchen Stabilität. Kind-Typen sind unberechenbar. Das erfordert Rücksicht."
+  },
+  "Hybrid": {
+    "Ameise": "Hybrid-Typen denken flexibel. Ameise-Typen brauchen feste Abläufe. Das führt zu Konflikten.",
+    "Yak":    "Hybrid-Typen verändern oft den Ansatz. Yak-Typen bleiben beständig. Das passt nicht zusammen."
+  }
+};
+
+ formElem.addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  // 🧠 Schritt 1: attributeData vorbereiten
+  attributeData = {}; // ← falls du es ganz oben `let` deklariert hast
+  Object.values(tierEigenschaften).flat().forEach(attr => {
+    attributeData[attr] = { sum: 0, count: 0 };
+  });
+
+  // 1) Einmaliges Holen der Eingaben
+  const formData = new FormData(formElem);
+  const modus    = document.querySelector('input[name="modus"]:checked').value;  // "selbst" oder "fremd"
+
+  // Bestehende Elemente ausblenden:
+  document.querySelector(".logo-container").style.display = "none";
+  
+  // Falls der Einleitungstext vorhanden ist, ausblenden
+  const introTextElem = document.querySelector(".intro-text");
+  if (introTextElem) {
+    introTextElem.style.display = "none";
+  }
+
+// 🧼 Situationsfeld ausblenden (Label + Textarea)
+const situationLabel = document.querySelector('label[for="situation"]');
+const situationTextarea = document.getElementById('situation');
+
+if (situationLabel) situationLabel.style.display = "none";
+if (situationTextarea) situationTextarea.style.display = "none";
+  
+// Weitere Elemente ausblenden:
+document.querySelector("h1").style.display = "none";
+document.querySelector(".logo-container").style.display = "none"; // falls noch da
+// …
+document.querySelectorAll(".user-inputs").forEach(el => el.style.display = "none");
+
+// Formular und Button ausblenden
+document.getElementById("fragebogen").style.display     = "none";
+document.getElementById("auswertenBtn").style.display  = "none";
+
+  // "Willkommen beim OrganisationsZoo" ausblenden:
+  // Wir gehen davon aus, dass der Text in einem <h2> innerhalb eines div mit "text-align: center" steht
+  const welcomeElem = document.querySelector("div[style*='text-align: center'] h2");
+  if (welcomeElem && welcomeElem.textContent.trim().includes("Willkommen beim OrganisationsZoo")) {
+    // Blendet den gesamten Container (das div, in dem das h2 steht) aus
+    welcomeElem.parentElement.style.display = "none";
+  }
+
+        // Ergebnisbereich und Print-Button sichtbar machen
+        ergebnisElem.style.display = "block";
+        printButton.style.display = "block";
+        ergebnisElem.style.position = "relative";
+
+        // Werte aus den Eingabefeldern übernehmen
+        var userName = document.querySelector('input[name="name"]').value;
+        var userEmail = document.querySelector('input[name="email"]').value;
+const situationText = document.getElementById("situation").value.trim() || "Keine konkrete Situation angegeben";
+
+ergebnisElem.insertAdjacentHTML('afterbegin', `
+  <div id="auswertung-start" style="text-align:center; margin-bottom:1rem;">
+    <img
+      src="eule-organisationszoo.png"
+      alt="Eule"
+      style="height:120px; width:auto; object-fit:cover;"
+    />
+  </div>
+  <h2 style="
+    text-align:center;
+    font-size:1.8em;
+    margin:0 0 1.5rem;
+    font-weight:700;
+    color:inherit;
+  ">
+    Willkommen im <span style="color:#E44A00;">OrganisationsZoo</span>
+  </h2>
+
+ <!-- Links: Kontaktdaten -->
+    <div id="left-info" style="
+      flex: 1;
+      font-size: 0.75em;
+      color: inherit;
+      line-height: 1.4;
+    ">
+      <div>
+        <span style="color:#E44A00; font-weight:700;">
+          OrganisationsZoo
+        </span>
+      </div>
+      <div>
+        Nicole Stöcker, Peter Renner und Simon Bertogg
+      </div>
+      <div>
+        Murwiesenstrasse 30,&nbsp;
+        <span style="white-space:nowrap;">
+          8057 Zürich, Schweiz
+        </span>
+      </div>
+      <div>
+        Tel: +41 79 634 07 50
+      </div>
+      <div>
+        <a href="mailto:info@organisationszoo.ch" style="color:inherit; text-decoration:none;">
+          info@organisationszoo.ch
+        </a>
+      </div>
+      <!-- hier den Abstand einfügen -->
+      <div style="height:0.75rem;"></div>
+
+      <div><strong>Name:</strong> ${userName}</div>
+      <div><strong>E‑Mail:</strong> ${userEmail}</div>
+    </div>
+  </div>
+`);
+
+requestAnimationFrame(() => {
+  const ziel = document.getElementById("auswertung-start");
+  if (ziel) {
+    ziel.scrollIntoView({ behavior: "smooth", block: "start" });
+  } else {
+    console.warn("Scrollziel nicht gefunden!");
+  }
+});
+
+// Reflexionstext erstellen und anhängen
+const reflekt = document.createElement('div');
+reflekt.classList.add('reflexion-text');
+reflekt.style.marginTop = '1.5rem';
+reflekt.innerHTML = `
+  <h3 style="font-size:1em; color:#E44A00; margin-bottom:0.5rem;">
+Was dein Tierprofil dir zeigt – und warum es mehr als nur spannend ist</h3>
+<p>
+  Dein Ergebnis ist mehr als eine nette Spielerei: 
+  <strong>Es spiegelt deine aktuelle Verhaltensdynamik wider.</strong> 
+  Jedes Tier steht für bestimmte Denk-, Fühl- und Handlungsweisen – <em>dein individueller Mix macht dich einzigartig!</em>
+</p>
+
+<p>
+  Vielleicht trägst du den unermüdlichen Fleiss einer <strong>Ameise</strong> in dir, die Organisation einer <strong>Biene</strong> oder die Weisheit einer <strong>Eule</strong>. 
+  Vielleicht erkennst du dich in der visionären Klarheit eines <strong>Adlers</strong> oder der spielerischen Energie eines <strong>Gibbons</strong> wieder? 
+  Auch taktisches Geschick wie ein <strong>Chamäleon</strong> oder die entschlossene Kraft eines <strong>Schakals</strong> könnten dich prägen.
+</p>
+
+<p>
+  Vielleicht wirken in dir auch der kindliche Enthusiasmus eines <strong>Kindes</strong>, die Anpassungsfähigkeit eines <strong>Insekts</strong> oder die Gelassenheit eines <strong>Wals</strong> – oder du trägst die kämpferische Härte eines <strong>Dinosauriers</strong> in dir. 
+  Und manchmal zeigt sich auch der Wunsch eines <strong>Einhorns</strong>, besonders, idealistisch und bedeutend zu sein.
+</p>
+
+<p>
+  Diese Tierbilder laden dich ein, deine Stärken und Entwicklungspotenziale mit Leichtigkeit und Tiefe zu entdecken – 
+  <strong>frei von Schubladen, offen für echte Reflexion.</strong>
+</p>
+
+<p>
+  Lust, dein Profil gemeinsam zu erkunden und weiterzuentwickeln? 
+  <strong>Dann ist der Workshop genau das Richtige für dich!</strong>
+</p>
+
+<p>
+  <em>Persönlichkeitsentwicklung darf Spass machen – Erkenntnisse entstehen am besten im lebendigen Austausch!</em>
+</p>
+`;
+ergebnisElem.appendChild(reflekt);
+
+const breakAfterReflekt = document.createElement('div');
+breakAfterReflekt.className = 'page-break';
+ergebnisElem.appendChild(breakAfterReflekt);
+
+// 3) Profil-Titel + Situation unter dem Reflexionstext
+ergebnisElem.insertAdjacentHTML('beforeend', `
+  <div style="
+    text-align:center;
+    font-size:1.1em;
+    font-weight:bold;
+    color:#E44A00;
+    line-height:1.3;
+    margin-top:2rem;
+    margin-bottom:1rem;
+  ">
+    Ihr Verhaltensprofil zur gewählten Situation
+    <div style="
+      font-size:0.85em;
+      font-weight:normal;
+      color:inherit;
+      margin-top:0.25rem;
+    ">
+      ${situationText}
+    </div>
+  </div>
+`);
+
+
+// direkt unter dem Insert des Ergebnis-Headers:
+ const formData2 = new FormData(formElem);
+const tierCounts = {};
+// attributeData wurde ja bereits initialisiert weiter oben
+
+// ---------------------------
+// Schritt 3: Punkte aus den Antworten sammeln
+// ---------------------------
+for (let i = 0; i < questions.length; i++) {
+  const q = questions[i];
+  for (let key in q.answers) {
+    const code = q.answers[key].code;
+    const wert = parseInt(formData.get(`frage${i}_${code}`)) || 0;
+    const tier = codeToTier[code];
+    if (!tier) continue;
+
+    // Direkte Punktevergabe für das zugeordnete Tier:
+    tierCounts[tier] = (tierCounts[tier] || 0) + wert;
+
+    // Bonuspunkte für ähnliche Tiere – dynamisch gewichtet
+    const similarAnimals = similarityMapping[tier] || [];
+    similarAnimals.forEach(sim => {
+      const similarityBonus = (wert / 4) * 0.5;
+      tierCounts[sim.animal] = (tierCounts[sim.animal] || 0) + similarityBonus;
+    });
+
+    // Eigenschaften des direkten Tiers dynamisch aufbauen
+    if (tierEigenschaften[tier]) {
+      tierEigenschaften[tier].forEach(attr => {
+        if (!attributeData[attr]) {
+          attributeData[attr] = { sum: 0, count: 0 };
+        }
+        attributeData[attr].sum += wert;
+        attributeData[attr].count++;
+      });
+    }
+
+    // Eigenschaften der ähnlichen Tiere (reduziert gewichtet)
+    similarAnimals.forEach(sim => {
+      const simTier = sim.animal;
+      const similarityBonus = (wert / 4) * 0.5;
+
+      if (tierEigenschaften[simTier]) {
+        tierEigenschaften[simTier].forEach(attr => {
+          if (!attributeData[attr]) {
+            attributeData[attr] = { sum: 0, count: 0 };
+          }
+          attributeData[attr].sum += similarityBonus;
+          attributeData[attr].count++;
+        });
+      }
+    });
+
+const attributePercentages = {};
+for (let attr in attributeData) {
+  const sum = attributeData[attr].sum;
+  const count = attributeData[attr].count;
+  attributePercentages[attr] = Math.round((sum / (count * 4)) * 100);
+}
+
+// 🔵 RELATIVE SKALIERUNG (Option A – empfohlen)
+const maxPercent = Math.max(...Object.values(attributePercentages)) || 1;
+
+Object.keys(attributePercentages).forEach(attr => {
+  attributePercentages[attr] = Math.round(
+    (attributePercentages[attr] / maxPercent) * 100
+  );
+});
+
+    // Gegenspieler-Abzug dynamisch (Schritt 2)
+    if (wert > 2) {
+      const gegenspielerTier = gegenspieler[tier];
+      if (gegenspielerTier) {
+        const gegenspielerAbzug = (wert - 2) / 2;
+        tierCounts[gegenspielerTier] = (tierCounts[gegenspielerTier] || 0) - gegenspielerAbzug;
+      }
+    }
+  }
+}
+
+// Summe aller Punkte (falls benötigt)
+const gesamtPunkte = Object.values(tierCounts).reduce((sum, v) => sum + v, 0);
+
+// ---------------------------
+// Gesamtauswertung Top-5 Tierprofile
+// ---------------------------
+ergebnisElem.innerHTML += `<h2>„Deine tierischen Verhaltensmuster“</h2>`;
+const sortedTiers = Object.entries(tierCounts).sort((a, b) => b[1] - a[1]);
+const top5 = sortedTiers.slice(0, 5);
+
+// Nur noch einmal den Wrapper mit deiner Css‑Klasse erzeugen:
+const chartWrap = document.createElement("div");
+chartWrap.className = "chartWrap";
+
+const maxPunkte = 25;
+
+top5.forEach(([tier, val]) => {
+  const fileName = makeFileName(tier);
+  const canvasId = `tierChart_${fileName}`;
+
+  const div = document.createElement("div");
+  div.className = "tier-profil";
+  div.innerHTML = `
+    <div class="tier-bild">
+     <img src="${makeFileName(tier)}.png" alt="${tier}" style="width:100%; height:auto; display:block;">
+    </div>
+    <div class="tier-text">
+      <strong>${tier}</strong>
+      <p>${(tierTexte[tier] || {}).kurz || ''}</p>
+      <span>Symbolisch für: ${(tierTexte[tier] || {}).symbolischFür || '-'}</span>
+    </div>
+    <div class="tier-diagramm">
+<canvas id="${canvasId}" width="80" height="80"></canvas>
+    </div>
+  `;
+
+  chartWrap.appendChild(div);
+
+setTimeout(() => {
+  new Chart(
+    document.getElementById(canvasId).getContext("2d"),
+    {
+      type: 'pie',
+      data: {
+        labels: [], // Keine Labels im Diagramm
+        datasets: [{
+          data: [val, maxPunkte - val],
+          backgroundColor: ["#E44A00", "#FFD1B2"],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            enabled: false
+          }
+        }
+      }
+    }
+  );
+}, 10);
+});
+
+ergebnisElem.appendChild(chartWrap);
+
+       // Annahme: 
+// top5 ist ein Array von Arrays, z.B.: [ [ "Hund", 10 ], [ "Katze", 8 ], ... ]
+// tierKonflikte ist ein Objekt, in dem du für jedes Tier (Schlüssel) ein Objekt mit Konfliktpartnern und Konflikttexten hast, z.B.:
+// {
+//    Hund: { Maus: "Hund jagt Maus.", Fuchs: "Hund vs Fuchs." },
+//    Katze: { Hund: "Katze hat Angst vor Hund.", Maus: "Katze jagt Maus." },
+//    ...
+// }
+
+const myAnimals = top5.map(item => item[0]); // Deine Top 5
+
+// Erstelle ein Aggregationsobjekt, um Konfliktpunkte für Tiere (ausserhalb der Top‑5) zu sammeln.
+const conflictAggregation = {};
+// Speichere zu jedem Konfliktpartner den (ersten) Konflikttext
+const conflictTextAggregation = {};
+
+// Für jedes deiner Tiere, durchlaufe den Konfliktbaum:
+myAnimals.forEach(myTier => {
+  if (tierKonflikte[myTier]) {
+    Object.entries(tierKonflikte[myTier]).forEach(([opponent, text]) => {
+      // Nur Konflikte berücksichtigen, deren Gegner NICHT in den Top‑5 sind.
+      if (!myAnimals.includes(opponent)) {
+        // Erhöhe die Konfliktpunkte (hier rein als 1-Zähler, alternativ könntest du auch mit Gewichtung arbeiten)
+        conflictAggregation[opponent] = (conflictAggregation[opponent] || 0) + 1;
+        // Falls noch kein Text für diesen Gegner gespeichert wurde, speichere ihn
+        if (!conflictTextAggregation[opponent]) {
+          conflictTextAggregation[opponent] = text;
+        }
+      }
+    });
+  }
+});
+
+// Jetzt hast du z. B. conflictAggregation = { "Tiger": 3, "Elefant": 2, ... }
+
+// Konvertiere das Aggregat in ein Array und sortiere absteigend nach Konfliktpunkten:
+const sortedOpponents = Object.entries(conflictAggregation)
+  .sort(([, countA], [, countB]) => countB - countA);
+
+// Jetzt wähle die beiden Konfliktpartner mit den meisten Punkten aus:
+if (sortedOpponents.length > 0) {
+  const opponent1 = sortedOpponents[0][0];
+  // Falls es mindestens zwei Gegner gibt, nehme den zweiten; ansonsten nur den ersten.
+  const opponent2 = sortedOpponents.length > 1 ? sortedOpponents[1][0] : null;
+  
+  // Erstelle den Header:
+  let conflictHeader = document.createElement("div");
+  conflictHeader.innerHTML = "<h2 style='font-size: 1.5em;'>„Wo’s im Gehege kracht…“</h2>";
+  ergebnisElem.appendChild(conflictHeader);
+
+  // Erstelle den Container für die Konfliktpartner:
+  const conflictDiv = document.createElement("div");
+  conflictDiv.className = "tier-konflikt-container";
+
+  // Erstelle HTML für den ersten Gegner:
+  let conflictHTML = `
+  <div class="tier-container">
+    <div class="tier-bild">
+      <img src="${makeFileName(opponent1)}.png" alt="${opponent1}" style="width:100%; height:auto; display:block;" />
+    </div>
+    <div class="tier-text">
+      <strong>${opponent1}</strong>
+      <p>${conflictTextAggregation[opponent1] || ""}</p>
+    </div>
+  </div>
+`;
+
+if (opponent2) {
+  conflictHTML += `
+    <div class="tier-container">
+      <div class="tier-bild">
+        <img src="${makeFileName(opponent2)}.png" alt="${opponent2}" style="width:100%; height:auto; display:block;" />
+      </div>
+      <div class="tier-text">
+        <strong>${opponent2}</strong>
+        <p>${conflictTextAggregation[opponent2] || ""}</p>
+      </div>
+    </div>
+  `;
+}
+
+  conflictDiv.innerHTML = conflictHTML;
+  ergebnisElem.appendChild(conflictDiv);
+
+const breakAfterGehege = document.createElement("div");
+breakAfterGehege.className = "page-break";
+ergebnisElem.appendChild(breakAfterGehege);
+  
+} else {
+  // Wenn keine Konflikte gefunden wurden:
+  let conflictHeader = document.createElement("div");
+  conflictHeader.innerHTML = "<h2 style='font-size: 1.5em;'>Keine Konflikte erkannt.</h2>";
+  ergebnisElem.appendChild(conflictHeader);
+}
+
+// ---------------------------
+// Darstellung Top‑5‑Tiere pro Kategorie in Containern
+// ---------------------------
+
+// Farben & Layout
+const containerStyle = `
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f7f7f7;
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+`;
+const tierStyle = `
+  flex: 1;
+  font-weight: bold;
+  font-size: 1.1em;
+`;
+const categoryStyle = `
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1em;
+  color: #444;
+`;
+const beschreibungStyle = `
+  flex: 2;
+  font-size: 0.95em;
+  color: #333;
+  text-align: left;
+`;
+
+
+// Mapping: Kategorie → relevante Frageindizes
+const kategorienMapping = {
+  "Alltagskompetenz & Selbständigkeit":       [0, 7],    // Haushaltsaufgaben, Medikamenteneinnahme
+  "Kommunikation & Konfliktverhalten":        [1, 8],    // Streitreaktion, Feedbackverarbeitung
+  "Motivation & Ausdauer":                    [2, 12],   // Hobby-/Aufgabenmotivation, zuverlässigste Stärke
+  "Anpassungsfähigkeit & Selbstregulation":   [3, 11],   // Umgang mit Änderungen, Reaktion unter Zeitdruck
+  "Entscheidungsfindung & Organisation":       [5, 10],   // Entscheidungen bei Unsicherheit, Planung von Ausflügen/Terminen
+  "Rollenverhalten & Aktivität":              [6, 9],    // Rolle bei Aktivitäten, Rolle in Wohnprojekten
+  "Umgebungspräferenzen":                     [4],       // Bevorzugte Umgebung
+  "Weiterentwicklung & Persönliche Reflexion":[13, 14]  // Mix-Frage, Entwicklungsbereiche
+};
+
+// Tier-Beschreibungen je Kategorie (siehe dein bestehendes Objekt)
+const categoryDescriptions = {
+"Alltagskompetenz & Selbständigkeit": {
+  "Ameise":           "Aufgaben werden zuverlässig erledigt – am besten mit einem Plan und gemeinsam mit anderen.",
+  "Biene":            "Hilft gerne im Alltag mit, ist pflichtbewusst und passt sich gut an Abläufe an.",
+  "Chamäleon":        "Kann sich gut anpassen und neue Wege finden, braucht aber klare Regeln.",
+  "Hund":             "Zeigt viel Einsatz und hilft gerne, braucht aber emotionale Unterstützung und Bestätigung.",
+  "Adler":            "Übernimmt Aufgaben vorausschauend, möchte dabei aber selbst entscheiden.",
+  "Katze":            "Arbeitet selbstständig, entscheidet aber gerne selbst, was wichtig ist.",
+  "Gibbon":           "Ist kommunikativ im Alltag, braucht aber auch Zeit für sich.",
+  "Hyäne":            "Übernimmt Aufgaben mit Energie, möchte aber selbst bestimmen, wie etwas gemacht wird.",
+  "Insekt_nützlich":  "Hilft gern mit, hat kreative Ideen und braucht ein wenig Struktur.",
+  "Insekt_lästig":    "Macht nur mit, wenn es passt – bringt manchmal Unruhe in den Ablauf.",
+  "Schakal":          "Geht eigene Wege im Alltag, hilft aber nicht regelmässig oder verlässlich.",
+  "Löwe":             "Packt Aufgaben mit Selbstbewusstsein an, möchte aber die Kontrolle behalten.",
+  "Maus":             "Arbeitet ruhig und verlässlich, braucht aber klare Anweisungen.",
+  "Parasit":          "Fällt wenig auf und übernimmt Aufgaben selten von sich aus.",
+  "Eule":             "Erledigt Aufgaben ruhig und überlegt, lässt sich dabei Zeit.",
+  "Piranha":          "Handelt schnell und zielgerichtet, manchmal zu ungestüm für ruhige Abläufe.",
+  "Eiche":            "Ist im Alltag stabil und fleissig – besonders bei festen Abläufen.",
+  "Klapperschlange":  "Übernimmt Aufgaben, wenn ein Vorteil sichtbar ist, handelt dabei strategisch.",
+  "Faultier":         "Arbeitet langsam, aber geduldig – braucht Zeit und keine Eile.",
+  "Dinosaurier":      "Zieht sich im Alltag oft zurück und hilft nur selten aktiv mit.",
+  "Einhorn":          "Beginnt mit Begeisterung, verliert aber schnell die Lust an alltäglichen Aufgaben.",
+  "Geier":            "Beobachtet erst, hilft aber nur, wenn es wirklich sinnvoll erscheint.",
+  "Wal":              "Geht ruhig und gefühlvoll an Aufgaben heran, braucht aber Vertrauen.",
+  "Hybrid":           "Kann viel leisten, entscheidet aber je nach Stimmung, ob mitgemacht wird.",
+  "Yak":              "Hilft regelmässig und still mit, ohne im Mittelpunkt zu stehen.",
+  "Kind":             "Ist neugierig und motiviert, braucht aber viel Anleitung und Hilfe."
+ },
+
+"Kommunikation & Konfliktverhalten": {
+  "Ameise":           "Bleibt in Gesprächen ruhig und sachlich, geht Streit oft aus dem Weg.",
+  "Biene":            "Sucht das Gespräch freundlich und hilft dabei, Streit zu vermeiden.",
+  "Chamäleon":        "Passt sich in Gesprächen gut an, sagt aber nicht immer offen die eigene Meinung.",
+  "Hund":             "Ist offen im Gespräch, zeigt Gefühle und sucht schnell eine Lösung bei Problemen.",
+  "Adler":            "Bleibt ruhig, übernimmt aber oft die Führung bei Konflikten.",
+  "Katze":            "Spricht direkt, zieht sich aber schnell zurück, wenn es unruhig wird.",
+  "Gibbon":           "Geht gerne in den Austausch, beobachtet aber zuerst aufmerksam.",
+  "Hyäne":            "Reagiert in Konflikten schnell und laut, vor allem bei Ungerechtigkeit.",
+  "Insekt_nützlich":  "Hört gut zu und bringt freundliche Vorschläge ein, um Streit zu lösen.",
+  "Insekt_lästig":    "Bringt mit häufigem Dazwischenreden Unruhe in Gespräche.",
+  "Schakal":          "Redet oft widersprüchlich oder provozierend, was Konflikte verschärfen kann.",
+  "Löwe":             "Ergreift schnell das Wort und möchte entscheiden, wie der Konflikt endet.",
+  "Maus":             "Ist in Gesprächen sehr still und meidet direkte Auseinandersetzungen.",
+  "Parasit":          "Redet wenig, beeinflusst Gespräche aber auf indirekte Weise.",
+  "Eule":             "Überlegt zuerst und bringt dann ruhige, durchdachte Beiträge ein.",
+  "Piranha":          "Redet laut und direkt, möchte sich in Konflikten schnell durchsetzen.",
+  "Eiche":            "Spricht ruhig und bestimmt, zeigt dabei klare Werte.",
+  "Klapperschlange":  "Drückt sich klug aus, manchmal aber auch spitz oder kritisch.",
+  "Faultier":         "Reagiert sehr zurückhaltend und langsam, meidet Streit oft ganz.",
+  "Dinosaurier":      "Beteiligt sich kaum an Gesprächen und bleibt meist im Hintergrund.",
+  "Einhorn":          "Redet offen über Gefühle, weicht Konflikten aber eher aus.",
+  "Geier":            "Hält sich in Gesprächen zurück, mischt sich nur ein, wenn nötig.",
+  "Wal":              "Sorgt mit ruhigen Worten für Ausgleich und hört gut zu.",
+  "Hybrid":           "Beteiligt sich gezielt und überlegt, bleibt oft sachlich.",
+  "Yak":              "Redet ruhig und besonnen, ohne viel Aufhebens zu machen.",
+  "Kind":             "Spricht direkt und lebhaft, kann mit Streit aber noch schwer umgehen."
+ },
+
+"Motivation & Ausdauer": {
+  "Ameise":           "Bleibt lange dran, wenn es klare Aufgaben und Ziele gibt.",
+  "Biene":            "Ist motiviert, wenn die Aufgabe für die Gruppe wichtig ist.",
+  "Chamäleon":        "Bleibt interessiert, wenn sich etwas verändert oder spannend bleibt.",
+  "Hund":             "Zeigt Einsatz, wenn positives Feedback oder Nähe spürbar ist.",
+  "Adler":            "Verfolgt ehrgeizige Ziele und will gute Leistungen zeigen.",
+  "Katze":            "Bleibt dran, wenn das Ziel sinnvoll erscheint – entscheidet dabei selbstständig.",
+  "Gibbon":           "Arbeitet gerne mit, wenn Austausch und Anerkennung vorhanden sind.",
+  "Hyäne":            "Möchte gewinnen und bleibt dabei, wenn es einen persönlichen Nutzen gibt.",
+  "Insekt_nützlich":  "Hilft mit, wenn die Aufgabe sinnvoll wirkt – braucht Lob und Struktur.",
+  "Insekt_lästig":    "Beginnt oft spontan, hört aber schnell wieder auf, wenn es langweilig wird.",
+  "Schakal":          "Arbeitet mit, wenn es zum eigenen Plan passt – nicht aus Pflichtgefühl.",
+  "Löwe":             "Zeigt grosse Ausdauer, wenn Verantwortung oder Anerkennung lockt.",
+  "Maus":             "Bleibt ruhig und konzentriert bei Aufgaben, braucht aber klare Schritte.",
+  "Parasit":          "Nutzt Aufgaben für sich, bleibt aber nicht dauerhaft dran.",
+  "Eule":             "Geht bedacht vor, bleibt langfristig motiviert, wenn der Sinn klar ist.",
+  "Piranha":          "Ist nur kurzzeitig motiviert – will schnelle Ergebnisse sehen.",
+  "Eiche":            "Zeigt Ausdauer, wenn es klare Abläufe gibt – arbeitet beständig.",
+  "Klapperschlange":  "Bleibt dabei, wenn ein Ziel erkennbar ist – plant taktisch.",
+  "Faultier":         "Geht Dinge langsam an, bleibt aber ruhig bei der Sache.",
+  "Dinosaurier":      "Zeigt nur wenig Motivation – hält aber durch, wenn es vertraut ist.",
+  "Einhorn":          "Beginnt begeistert, verliert aber schnell den Fokus.",
+  "Geier":            "Bleibt auf Abstand, beteiligt sich nur bei klarem Vorteil.",
+  "Wal":              "Zeigt Ausdauer, wenn Vertrauen und emotionale Sicherheit da sind.",
+  "Hybrid":           "Bleibt motiviert, wenn Aufgaben flexibel und abwechslungsreich sind.",
+  "Yak":              "Arbeitet beständig und geduldig – auch bei langen Aufgaben.",
+  "Kind":             "Ist begeistert bei neuen Ideen, braucht aber viel Unterstützung zum Durchhalten."
+ },
+
+"Anpassungsfähigkeit & Selbstregulation": {
+  "Ameise":           "Kommt gut mit Veränderungen zurecht, wenn es klare Abläufe gibt.",
+  "Biene":            "Passt sich schnell an, solange die Gruppe mitzieht.",
+  "Chamäleon":        "Wechselt flexibel den Kurs, braucht aber Orientierung.",
+  "Hund":             "Reagiert emotional auf Veränderungen, sucht dabei Nähe und Sicherheit.",
+  "Adler":            "Bleibt auch in neuen Situationen ruhig und zielgerichtet.",
+  "Katze":            "Entscheidet selbst, wie sie sich anpasst – braucht dabei Unabhängigkeit.",
+  "Gibbon":           "Spricht über Probleme und passt sich an, wenn Austausch möglich ist.",
+  "Hyäne":            "Reagiert oft impulsiv, kämpft sich aber durch schwierige Situationen.",
+  "Insekt_nützlich":  "Findet kreative Wege, um mit Veränderungen klarzukommen.",
+  "Insekt_lästig":    "Reagiert schnell und unvorhersehbar – oft unruhig im Alltag.",
+  "Schakal":          "Lässt sich wenig sagen, reagiert stark auf Einschränkungen.",
+  "Löwe":             "Bleibt bei Stress kontrolliert, will aber die Richtung selbst bestimmen.",
+  "Maus":             "Zieht sich bei Veränderungen zurück und braucht Zeit zur Anpassung.",
+  "Parasit":          "Fällt wenig auf – passt sich eher still und ausweichend an.",
+  "Eule":             "Analysiert ruhig und reagiert mit Bedacht auf neue Situationen.",
+  "Piranha":          "Reagiert spontan und kraftvoll, oft ohne zu überlegen.",
+  "Eiche":            "Bleibt auch bei Stress ruhig und verlässlich.",
+  "Klapperschlange":  "Handelt überlegt, zeigt aber Reaktionen erst spät oder verdeckt.",
+  "Faultier":         "Lässt sich nicht aus der Ruhe bringen – macht alles im eigenen Tempo.",
+  "Dinosaurier":      "Tut sich schwer mit neuen Situationen und braucht Vertrautes.",
+  "Einhorn":          "Ist offen für Neues, verliert aber schnell den Überblick.",
+  "Geier":            "Beobachtet erst lange – entscheidet dann vorsichtig.",
+  "Wal":              "Reagiert ruhig, braucht aber emotionale Sicherheit.",
+  "Hybrid":           "Passt sich gut an, wenn er den Sinn versteht – reagiert schnell, aber überlegt.",
+  "Yak":              "Reagiert langsam, aber sicher – bleibt ruhig, auch wenn sich etwas ändert.",
+  "Kind":             "Reagiert oft spontan, braucht Hilfe beim Umgang mit starken Gefühlen."
+ },
+
+"Entscheidungsfindung & Organisation": {
+  "Ameise":           "Plant sorgfältig und trifft Entscheidungen, wenn alles gut vorbereitet ist.",
+  "Biene":            "Organisiert Aufgaben gut im Team und entscheidet im Sinne der Gruppe.",
+  "Chamäleon":        "Entscheidet flexibel und passt Pläne schnell an neue Situationen an.",
+  "Hund":             "Lässt sich bei Entscheidungen oft von Gefühlen und Vertrauen leiten.",
+  "Adler":            "Denkt weit voraus und entscheidet schnell und mit Ziel.",
+  "Katze":            "Entscheidet gerne selbstständig, braucht dafür aber ihre Ruhe.",
+  "Gibbon":           "Bespricht Dinge gerne, bevor er sich entscheidet, und denkt dabei kreativ.",
+  "Hyäne":            "Entscheidet ehrgeizig und plant so, dass sie ihre Ziele gut erreichen kann.",
+  "Insekt_nützlich":  "Hat viele Ideen und findet oft eigene Wege, um etwas zu organisieren.",
+  "Insekt_lästig":    "Plant wenig – entscheidet oft plötzlich oder aus dem Bauch heraus.",
+  "Schakal":          "Entscheidet oft anders als erwartet – manchmal unüberlegt oder gegen Regeln.",
+  "Löwe":             "Trifft Entscheidungen klar und bestimmt – will dabei aber das letzte Wort haben.",
+  "Maus":             "Denkt lange nach, bevor sie etwas entscheidet – braucht dafür klare Informationen.",
+  "Parasit":          "Wartet oft ab, was andere machen, und vermeidet eigene Entscheidungen.",
+  "Eule":             "Überlegt genau und plant vorausschauend – entscheidet ruhig und logisch.",
+  "Piranha":          "Trifft schnelle Entscheidungen – oft direkt, aber nicht immer durchdacht.",
+  "Eiche":            "Plant Schritt für Schritt und entscheidet mit Blick auf das grosse Ganze.",
+  "Klapperschlange":  "Entscheidet durchdacht, aber zurückhaltend – hat oft einen Plan im Hintergrund.",
+  "Faultier":         "Lässt sich viel Zeit – trifft Entscheidungen langsam, aber bedacht.",
+  "Dinosaurier":      "Hält an alten Plänen fest und entscheidet selten etwas Neues.",
+  "Einhorn":          "Hat grosse Ideen, entscheidet aber manchmal zu träumerisch oder unklar.",
+  "Geier":            "Beobachtet lange und entscheidet erst, wenn es sich wirklich lohnt.",
+  "Wal":              "Entscheidet ruhig und nach Gefühl – achtet dabei auch auf andere.",
+  "Hybrid":           "Denkt strategisch und kann schnell gute Pläne entwickeln.",
+  "Yak":              "Plant zuverlässig und entscheidet, was praktisch und sicher ist.",
+  "Kind":             "Entscheidet spontan, braucht aber Hilfe bei Planung und Überblick."
+ },
+
+"Rollenverhalten & Aktivität": {
+  "Ameise":           "Hilft fleissig mit, übernimmt Aufgaben und arbeitet gern im Hintergrund.",
+  "Biene":            "Bringt sich zuverlässig in Gruppen ein und denkt an das gemeinsame Ziel.",
+  "Chamäleon":        "Macht gerne mit, übernimmt aber je nach Stimmung unterschiedliche Rollen.",
+  "Hund":             "Ist oft voller Energie dabei und sorgt für gute Stimmung in der Gruppe.",
+  "Adler":            "Will gerne führen und bringt eigene Ideen ein – bleibt dabei eher für sich.",
+  "Katze":            "Macht lieber alleine mit, sucht sich Aufgaben selbst aus.",
+  "Gibbon":           "Ist sehr gesprächig und bringt sich aktiv in Gruppenaktionen ein.",
+  "Hyäne":            "Will mitbestimmen und geht oft zielstrebig voran.",
+  "Insekt_nützlich":  "Bringt praktische Ideen ein und hilft oft dort, wo es gebraucht wird.",
+  "Insekt_lästig":    "Mischt sich unregelmässig ein und kann Abläufe stören.",
+  "Schakal":          "Bringt eigene Ideen ein, geht aber oft einen ganz anderen Weg als die Gruppe.",
+  "Löwe":             "Übernimmt gerne die Leitung, möchte bestimmen, was gemacht wird.",
+  "Maus":             "Hält sich zurück, beobachtet viel und hilft ruhig mit.",
+  "Parasit":          "Bleibt im Hintergrund und übernimmt selten aktiv Verantwortung.",
+  "Eule":             "Gibt kluge Hinweise, beteiligt sich aber lieber ruhig oder aus der Ferne.",
+  "Piranha":          "Geht direkt zur Sache und will schnelle Ergebnisse sehen.",
+  "Eiche":            "Ist verlässlich dabei, sorgt für Stabilität und Ruhe im Team.",
+  "Klapperschlange":  "Bringt sich gezielt ein, wenn es für sie selbst passt.",
+  "Faultier":         "Beteiligt sich langsam und ruhig, aber stetig.",
+  "Dinosaurier":      "Hält Abstand und beteiligt sich selten aktiv.",
+  "Einhorn":          "Hat kreative Ideen, braucht aber Unterstützung bei der Umsetzung.",
+  "Geier":            "Beobachtet viel und beteiligt sich, wenn es wirklich nötig ist.",
+  "Wal":              "Bringt emotionale Stärke mit und unterstützt, wenn es wichtig wird.",
+  "Hybrid":           "Macht mit, wenn er den Sinn erkennt – mal sehr aktiv, mal zurückhaltend.",
+  "Yak":              "Ist beständig dabei, übernimmt Verantwortung ohne viel Aufhebens.",
+  "Kind":             "Ist lebendig und voller Ideen, braucht aber klare Anleitung."
+ },
+"Umgebungspräferenzen": {
+  "Ameise":           "Fühlt sich wohl in klaren, strukturierten Abläufen mit festen Aufgaben.",
+  "Biene":            "Mag ein lebendiges Umfeld, in dem man gemeinsam etwas schafft.",
+  "Chamäleon":        "Kommt gut mit wechselnden Situationen klar und passt sich gerne an.",
+  "Hund":             "Fühlt sich am wohlsten, wenn andere freundlich und verlässlich sind.",
+  "Adler":            "Braucht Freiraum für eigene Ideen und klare Ziele.",
+  "Katze":            "Liebt ruhige, selbstbestimmte Umgebungen ohne viel Einmischung.",
+  "Gibbon":           "Mag Orte, an denen viel gesprochen und gelacht wird.",
+  "Hyäne":            "Fühlt sich wohl, wenn sie aktiv sein kann und klare Ansagen bekommt.",
+  "Insekt_nützlich":  "Blüht in kreativen, offenen Umgebungen auf, wo Ideen zählen.",
+  "Insekt_lästig":    "Reagiert stark auf Reize – braucht viel Abwechslung, wird aber schnell unruhig.",
+  "Schakal":          "Sucht Umgebungen, in denen er eigene Wege gehen kann.",
+  "Löwe":             "Mag Umgebungen, in denen er führen oder entscheiden darf.",
+  "Maus":             "Fühlt sich sicher, wenn es leise, geordnet und vorhersehbar ist.",
+  "Parasit":          "Bewegt sich gern im Hintergrund – bevorzugt unauffällige Räume.",
+  "Eule":             "Liebt ruhige Orte mit klaren Regeln und Zeit zum Nachdenken.",
+  "Piranha":          "Braucht eine Umgebung, in der schnell gehandelt wird.",
+  "Eiche":            "Fühlt sich wohl, wenn alles geordnet, ruhig und sinnvoll ist.",
+  "Klapperschlange":  "Bevorzugt Orte, wo sie sich gezielt einbringen kann.",
+  "Faultier":         "Mag ruhige, einfache Umgebungen ohne viel Druck.",
+  "Dinosaurier":      "Fühlt sich sicher in gewohnten, stabilen Strukturen.",
+  "Einhorn":          "Liebt bunte, kreative Umgebungen, in denen man träumen darf.",
+  "Geier":            "Braucht Übersicht und Abstand – beobachtet lieber als mitzumachen.",
+  "Wal":              "Fühlt sich wohl, wenn es ruhig, ehrlich und emotional stimmig ist.",
+  "Hybrid":           "Braucht flexible Umgebungen, die Raum für Nachdenken und Veränderung lassen.",
+  "Yak":              "Fühlt sich sicher in festen, verlässlichen Strukturen.",
+  "Kind":             "Mag spielerische, abwechslungsreiche Umgebungen mit viel Offenheit."
+ },
+"Weiterentwicklung & Persönliche Reflexion": {
+  "Ameise":           "Lernt am besten mit festen Aufgaben und klaren Zielen.",
+  "Biene":            "Entwickelt sich gut durch Lob und gemeinsame Erfolge.",
+  "Chamäleon":        "Lernt schnell, wenn sich die Umgebung verändert – braucht aber manchmal klare Grenzen.",
+  "Hund":             "Wächst durch Nähe, Vertrauen und Anerkennung.",
+  "Adler":            "Entwickelt sich durch eigene Ideen und klare Ziele.",
+  "Katze":            "Lernt auf eigene Weise – braucht dabei Freiraum.",
+  "Gibbon":           "Reflektiert gerne laut mit anderen und lernt durch Austausch.",
+  "Hyäne":            "Entwickelt sich durch Herausforderungen, will dabei aber mitentscheiden.",
+  "Insekt_nützlich":  "Wächst an neuen Aufgaben, wenn man ihn ermutigt.",
+  "Insekt_lästig":    "Tut sich mit Veränderungen schwer, braucht klare Regeln.",
+  "Schakal":          "Lernt am besten durch eigene Erfahrungen – auch wenn es mal kracht.",
+  "Löwe":             "Entwickelt sich, wenn man ihm Verantwortung gibt.",
+  "Maus":             "Lernt still und zuverlässig, braucht aber Zeit und Sicherheit.",
+  "Parasit":          "Verändert sich nur, wenn es wirklich nötig ist.",
+  "Eule":             "Denkt viel über sich nach und entwickelt sich ruhig weiter.",
+  "Piranha":          "Macht schnell Fortschritte – kann aber unüberlegt handeln.",
+  "Eiche":            "Wächst langsam, aber stetig – wenn alles gut strukturiert ist.",
+  "Klapperschlange":  "Lernt klug und geplant, wenn sie einen Vorteil sieht.",
+  "Faultier":         "Entwickelt sich in kleinen Schritten – braucht viel Geduld.",
+  "Dinosaurier":      "Tut sich schwer mit Veränderungen, braucht alte Strukturen.",
+  "Einhorn":          "Hat viele Ideen – braucht Hilfe, sie auch umzusetzen.",
+  "Geier":            "Lernt durch Beobachten und denkt viel nach, bevor er handelt.",
+  "Wal":              "Wächst durch gute Gespräche und ein sicheres Umfeld.",
+  "Hybrid":           "Entwickelt sich vielseitig – braucht dabei aber eigene Freiheiten.",
+  "Yak":              "Lernt langsam und verlässlich – bleibt bei dem, was funktioniert.",
+  "Kind":             "Lernt spielerisch und begeistert – braucht aber klare Begleitung."
+ } // 👈 Ende des letzten Kategorien-Blocks
+};
+
+
+// ––––––––––––––––––––––––––––––––––––––––––––––––––––
+// 1) Mapping: Bei welchen Fragen taucht jedes Top‑5‑Tier auf?
+// ––––––––––––––––––––––––––––––––––––––––––––––––––––
+const tierZuKategorie = {};
+questions.forEach((q, i) => {
+  Object.values(q.answers).forEach(ans => {
+    const tier = codeToTier[ans.code];
+    if (tier && top5.some(([name]) => name === tier)) {
+      (tierZuKategorie[tier] ||= []).push(i);
+    }
+  });
+});
+
+const headingWrapper = document.createElement("div");
+headingWrapper.style.maxWidth = "800px";
+headingWrapper.style.margin = "40px auto 30px";
+headingWrapper.style.padding = "0 16px";
+headingWrapper.style.display = "flex";
+headingWrapper.style.flexDirection = "column";
+headingWrapper.style.gap = "12px";
+
+// 1. Haupttitel: Instinkte, Intuition & Einfluss
+const subtitle = document.createElement("h2");
+subtitle.textContent = "Instinkte, Intuition & Einfluss";
+subtitle.style.fontSize = "1.6em";
+subtitle.style.fontWeight = "700";
+subtitle.style.margin = "0";
+subtitle.style.color = "inherit"; // Standardfarbe (dunkel im Light Mode, hell im Dark Mode)
+subtitle.style.textAlign = "left";
+headingWrapper.appendChild(subtitle);
+
+// 2. Erklärungstext
+const erklaerung = document.createElement("p");
+erklaerung.textContent = "Diese Übersicht zeigt, wie deine charakterlichen Tendenzen sich in verschiedenen Situationen ausdrücken – ganz ohne Schubladendenken, aber mit einem Augenzwinkern.";
+erklaerung.style.fontSize = "0.95em";
+erklaerung.style.lineHeight = "1.6";
+erklaerung.style.margin = "0";
+erklaerung.style.textAlign = "left";
+erklaerung.style.color = "inherit";
+headingWrapper.appendChild(erklaerung);
+
+// 3. Zweite Hauptzeile: „Deine Verhaltenskarte“
+const verhaltensTitel = document.createElement("h2");
+verhaltensTitel.textContent = "„Deine Verhaltenskarte“";
+verhaltensTitel.style.fontSize = "1.6em";
+verhaltensTitel.style.fontWeight = "700";
+verhaltensTitel.style.margin = "24px 0 0";
+verhaltensTitel.style.color = "inherit";
+verhaltensTitel.style.textAlign = "left";
+headingWrapper.appendChild(verhaltensTitel);
+
+// In Ergebnis einfügen
+ergebnisElem.appendChild(headingWrapper);
+
+Object.keys(kategorienMapping).forEach(kat => {
+  const relevanteFragen = kategorienMapping[kat];
+  const counts = {};
+  Object.entries(tierZuKategorie).forEach(([tier, fragen]) => {
+    const c = fragen.filter(i => relevanteFragen.includes(i)).length;
+    if (c > 0) counts[tier] = c;
+  });
+
+  const topTier = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || top5[0][0];
+  const beschreibung = categoryDescriptions[kat]?.[topTier] || 'Hier erfährst du mehr über dieses Tier.';
+  const fileName = makeFileName(topTier);
+
+  // Gesamtcontainer
+  const section = document.createElement('div');
+  section.style.cssText = `
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+   background-color: #ffffff;
+color: #000000;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 20px 0;
+    transition: background 0.3s, color 0.3s;
+    flex-wrap: wrap;
+  `;
+
+  // Bild links
+  const imageDiv = document.createElement('div');
+  imageDiv.style.cssText = `
+    flex: 0 0 auto;
+    width: 60px;
+    height: 60px;
+  `;
+  imageDiv.innerHTML = `<img src="${fileName}.png" alt="${topTier}" style="width:100%; height:auto;">`;
+  section.appendChild(imageDiv);
+
+  // Textblock rechts (mittig stacked)
+  const textWrapper = document.createElement('div');
+  textWrapper.style.cssText = `
+    flex: 1 1 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  `;
+
+  const titleEl = document.createElement('div');
+  titleEl.style.cssText = `
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 6px;
+  `;
+  titleEl.textContent = kat;
+
+  const descEl = document.createElement('div');
+  descEl.style.cssText = `
+    font-size: 0.95em;
+    line-height: 1.5;
+    color: inherit;
+  `;
+  descEl.innerHTML = beschreibung;
+
+  textWrapper.appendChild(titleEl);
+  textWrapper.appendChild(descEl);
+  section.appendChild(textWrapper);
+
+  ergebnisElem.appendChild(section);
+});
+
+// Seitenumbruch nach allen Verhaltenskategorien
+const breakNachKarte = document.createElement("div");
+breakNachKarte.className = "page-break";
+ergebnisElem.appendChild(breakNachKarte);
+
+// ---------------------------
+// Berechne die Prozentwerte für jedes Attribut
+// ---------------------------
+const attributePercentages = {};
+for (let attr in attributeData) {
+  const sum   = attributeData[attr].sum;
+  const count = attributeData[attr].count;
+  // 4 = Maximalwertung pro Frage
+  attributePercentages[attr] = Math.round((sum / (count * 4)) * 100);
+}
+
+// Optional: zum Debuggen
+console.log("attributePercentages:", attributePercentages);
+
+// ---------------------------
+// Netzdiagramm anzeigen
+// ---------------------------
+
+// Werte vorbereiten
+const attributeLabels = Object.keys(attributePercentages);
+const attributeValues = Object.values(attributePercentages);
+
+// ---------------------------
+// Titel & Beschreibung für Selbstreflexion
+// ---------------------------
+const reflexionWrapper = document.createElement("div");
+reflexionWrapper.style.maxWidth = "800px";
+reflexionWrapper.style.margin = "60px auto 30px";
+reflexionWrapper.style.textAlign = "center";
+
+const reflexionTitle = document.createElement("h2");
+reflexionTitle.textContent = "Dein persönliches Profil auf einen Blick";
+reflexionTitle.style.fontSize = "1.8em";
+reflexionTitle.style.marginBottom = "12px";
+
+const reflexionText = document.createElement("p");
+reflexionText.textContent =
+  "Dieses Diagramm zeigt, wie ausgeprägt bestimmte Eigenschaften bei dir im Gesamtbild erscheinen – basierend auf deinen Antworten. Es ist eine Momentaufnahme deiner Reflexion über dich selbst.";
+reflexionText.style.fontSize = "0.95em";
+reflexionText.classList.add("reflexion-text");
+reflexionText.style.lineHeight = "1.6";
+
+reflexionWrapper.appendChild(reflexionTitle);
+reflexionWrapper.appendChild(reflexionText);
+ergebnisElem.appendChild(reflexionWrapper);
+
+// Canvas in zentriertem Container einfügen
+const canvasWrapper = document.createElement("div");
+canvasWrapper.style.display = "flex";
+canvasWrapper.style.justifyContent = "center";
+canvasWrapper.style.alignItems = "center";
+canvasWrapper.style.marginBottom = "40px";
+
+const canvas = document.createElement("canvas");
+const size = 400;
+const scale = 2;
+canvas.width = size * scale;
+canvas.height = size * scale;
+canvas.style.width = size + "px";
+canvas.style.height = size + "px";
+
+canvasWrapper.appendChild(canvas);
+ergebnisElem.appendChild(canvasWrapper);
+
+// Context holen und skalieren
+const ctx = canvas.getContext("2d");
+ctx.scale(scale, scale);
+
+// Dynamisches Maximum
+const maxEigenschaftswert = Math.max(...attributeValues);
+const dynamicMax = Math.ceil(maxEigenschaftswert * 1.2);
+
+// Dark Mode Farben setzen
+const darkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+const pointLabelColor = darkMode ? "#ffffff" : "#000000";
+const gridColor = darkMode ? "#555555" : "#eee";
+
+// Nur wenn Werte vorhanden sind
+if (attributeLabels.length > 0) {
+  new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: attributeLabels,
+      datasets: [{
+        label: "Dein Profil",
+        data: attributeValues,
+        backgroundColor: "rgba(228, 74, 0, 0.3)",
+        borderColor: "#E44A00",
+        pointBackgroundColor: "#E44A00",
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: false,
+      scales: {
+        r: {
+          suggestedMin: 0,
+          suggestedMax: dynamicMax,
+          ticks: {
+            stepSize: 20,
+            backdropColor: "transparent",
+            font: { size: 12 }
+          },
+          pointLabels: {
+            font: { size: 28 },
+            color: pointLabelColor
+          },
+          grid: { color: gridColor },
+          angleLines: { color: "#ccc" }
+        }
+      },
+      plugins: {
+        legend: { display: false }
+   }
+        }
+      });
+    } // Ende der if‑Abfrage
+
+formElem.addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  // … ALLES, was die Ergebnisse aufbaut und #auswertung-start injiziert …
+
+  // Ergebnis und Print-Button zeigen
+  ergebnisElem.style.display = "block";
+  printButton.style.display = "block";
+
+  setTimeout(() => {
+  const ziel = document.getElementById("auswertung-start");
+  if (ziel) {
+    ziel.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}, 0); // oder 50–100ms
+
+}); // 
+  }); // ← schliesst formElem.addEventListener("submit", …)
+
+  // 🧠 E-Mail prüfen, Button nur aktivieren bei gültiger Adresse
+  const emailInput   = document.getElementById("email");
+  const auswertenBtn = document.getElementById("auswertenBtn");
+  emailInput.addEventListener("input", () => {
+    const emailWert  = emailInput.value.trim();
+    const istGueltig = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailWert);
+    auswertenBtn.disabled = !istGueltig;
+  });
+
+  // 🖨 Druck-Button: Löst window.print() aus
+  printButton.addEventListener("click", () => window.print());
+
+}); // ← schliesst document.addEventListener("DOMContentLoaded", …)
+</script>
+
+  <!-- Footer nur beim Drucken sichtbar – direkt vor </body> -->
+  <div class="print-footer">
+    © 2025 <span style="color: #E44A00;">OrganisationsZoo</span> Nicole Stöcker, Peter Renner und Simon Bertogg - Alle Rechte vorbehalten.
+  </div>
+</body>
+</html>
